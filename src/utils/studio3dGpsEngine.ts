@@ -295,14 +295,33 @@ function smoothTrackCoordinates(points: Studio3DTrackPoint[]): Array<{ x: number
   out[0] = { x: points[0].xM, z: points[0].zM };
   out[n - 1] = { x: points[n - 1].xM, z: points[n - 1].zM };
 
-  const weights = [0.1, 0.24, 0.32, 0.24, 0.1];
+  const baseWeights = [0.08, 0.22, 0.40, 0.22, 0.08];
   for (let i = 1; i < n - 1; i += 1) {
+    // Deteksi sudut belokan agar tikungan tajam 90 derajat tidak dipotong miring melewati gedung
+    const pPrev = points[Math.max(0, i - 1)];
+    const pCurr = points[i];
+    const pNext = points[Math.min(n - 1, i + 1)];
+    const v1x = pCurr.xM - pPrev.xM;
+    const v1z = pCurr.zM - pPrev.zM;
+    const v2x = pNext.xM - pCurr.xM;
+    const v2z = pNext.zM - pCurr.zM;
+    const l1 = Math.hypot(v1x, v1z);
+    const l2 = Math.hypot(v2x, v2z);
+    let cornerFactor = 1.0;
+    if (l1 > 0.5 && l2 > 0.5) {
+      const dot = Math.max(-1, Math.min(1, (v1x * v2x + v1z * v2z) / (l1 * l2)));
+      const turnAngle = Math.acos(dot); // 0 = lurus, PI/2 = belok 90 deg
+      if (turnAngle > 0.42) {
+        cornerFactor = Math.max(0.12, 1 - (turnAngle - 0.42) / 1.15);
+      }
+    }
+
     let sx = 0;
     let sz = 0;
     let sw = 0;
     for (let k = -2; k <= 2; k += 1) {
       const idx = Math.min(n - 1, Math.max(0, i + k));
-      const w = weights[k + 2];
+      const w = k === 0 ? baseWeights[2] : baseWeights[k + 2] * cornerFactor;
       sx += points[idx].xM * w;
       sz += points[idx].zM * w;
       sw += w;
@@ -352,7 +371,7 @@ export function buildGroundedRoutePath(
 ): GroundedRoutePath {
   const heightOffsetM = options?.heightOffsetM ?? 0.08;
   const maxSegmentLenM = options?.maxSegmentLenM ?? 5.0;
-  const maxCornerFilletM = options?.maxCornerFilletM ?? 2.4;
+  const maxCornerFilletM = options?.maxCornerFilletM ?? 3.8;
 
   if (points.length === 0) {
     return { vertices: [], totalArcMeters: 0 };

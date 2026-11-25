@@ -84,7 +84,8 @@ export interface MapConfig {
 
 export type DurationPresetSec = 15 | 30 | 45 | 60 | 'custom';
 export type MusicPreset3D = 'none' | 'upbeat-synth' | 'lofi-stride' | 'epic-trail' | 'custom-mp3';
-export type VideoQuality3D = '720p' | '1080p';
+export type VideoQuality3D = '720p' | '1080p' | '4k';
+export type VideoFps3D = 30 | 60;
 
 export interface ExportConfig {
   durationPreset: DurationPresetSec;
@@ -95,6 +96,7 @@ export interface ExportConfig {
   customAudioName: string | null;
   volume: number;
   quality: VideoQuality3D;
+  fps?: VideoFps3D;
 }
 
 export interface Studio3DTrackPoint {
@@ -190,5 +192,6 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
   customAudioUrl: null,
   customAudioName: null,
   volume: 0.65,
-  quality: '720p',
+  quality: '1080p',
+  fps: 30,
 };

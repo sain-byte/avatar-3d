@@ -916,23 +916,42 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
 
               <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Resolusi & Pose Finish
+                  Resolusi, FPS & Pose Finish
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['720p', '1080p'] as VideoQuality3D[]).map((q) => (
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(['720p', '1080p', '4k'] as VideoQuality3D[]).map((q) => (
                     <button
                       key={q}
                       type="button"
                       onClick={() => onChangeExportConfig((prev) => ({ ...prev, quality: q }))}
-                      className={`h-8 rounded-lg border font-mono-tabular text-xs font-bold cursor-pointer ${
+                      className={`h-8 rounded-lg border font-mono-tabular text-[11px] font-bold cursor-pointer ${
                         exportConfig.quality === q
                           ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
                           : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      {q === '1080p' ? '1080×1920 (FHD)' : '720×1280 (HD)'}
+                      {q === '4k' ? '4K (UHD)' : q === '1080p' ? '1080p' : '720p'}
                     </button>
                   ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {([30, 60] as const).map((fpsVal) => {
+                    const activeFps = (exportConfig.fps ?? 30) === fpsVal;
+                    return (
+                      <button
+                        key={fpsVal}
+                        type="button"
+                        onClick={() => onChangeExportConfig((prev) => ({ ...prev, fps: fpsVal }))}
+                        className={`h-8 rounded-lg border font-mono-tabular text-xs font-bold cursor-pointer ${
+                          activeFps
+                            ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {fpsVal} FPS
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <label className="flex items-center gap-2 pt-1 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -1089,7 +1108,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                     className="w-full h-10 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold inline-flex items-center justify-center gap-2 shadow-md transition-colors cursor-pointer"
                   >
                     <Download className="w-4 h-4" aria-hidden="true" />
-                    <span>Render & Unduh Video ({exportConfig.quality})</span>
+                    <span>Render & Unduh ({exportConfig.quality.toUpperCase()} · {exportConfig.fps ?? 30}fps)</span>
                   </button>
                 )}
 

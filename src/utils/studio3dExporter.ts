@@ -324,13 +324,13 @@ function paintBroadcastHudOverlay(params: {
     includeFinishPose,
   } = params;
   const txtPalette = resolveOverlayPrimaryText(textColorMode, mapStyle);
-  const s = width / 720;
+  const s = (width / 720) * 0.84;
   const finishThreshold = includeFinishPose ? 0.88 : 1.0;
   const routeProgress = Math.min(1, Math.max(0, progress / finishThreshold));
 
-  const padX = 28 * s;
-  const topY = 26 * s;
-  const mmSize = 86 * s;
+  const padX = Math.round(width * 0.042);
+  const topY = Math.round(height * 0.022);
+  const mmSize = 76 * s;
   const runnerNameClean = (runner.runnerName || 'Atlet Kalcer').trim().slice(0, 24);
   const locationClean = (track.location || '').trim();
   const metaSubline = locationClean
@@ -472,7 +472,7 @@ function paintBroadcastHudOverlay(params: {
   const colW = baseW / 3;
 
   if (banner.finishAlpha > 0.15) {
-    const cardH = 214 * s;
+    const cardH = 186 * s;
     const topFinishY = height - cardH - 24 * s;
 
     if (useGlassBox) {
@@ -541,7 +541,7 @@ function paintBroadcastHudOverlay(params: {
       ctx.fillText(m.value, mx, my + 22 * s);
     });
   } else {
-    const cardH = 196 * s;
+    const cardH = 172 * s;
     const topLiveY = height - cardH - 24 * s;
 
     if (useGlassBox) {
@@ -605,7 +605,7 @@ function paintBroadcastHudOverlay(params: {
       const col = idx % 3;
       const row = Math.floor(idx / 3);
       const sx = baseX + colW * (col + 0.5);
-      const sy = topLiveY + (76 + row * 54) * s;
+      const sy = topLiveY + (70 + row * 47) * s;
 
       ctx.font = `600 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(st.label, sx, sy);
@@ -682,10 +682,10 @@ export async function recordStudio3DVideo({
     throw new Error('Browser ini belum mendukung perekaman video MediaRecorder.');
   }
 
-  const width = exportConfig.quality === '1080p' ? 1080 : 720;
-  const height = exportConfig.quality === '1080p' ? 1920 : 1280;
+  const width = exportConfig.quality === '4k' ? 2160 : exportConfig.quality === '1080p' ? 1080 : 720;
+  const height = exportConfig.quality === '4k' ? 3840 : exportConfig.quality === '1080p' ? 1920 : 1280;
   const durationSec = getExportDurationSec(exportConfig);
-  const fps = 30;
+  const fps = exportConfig.fps ?? 30;
   const allSplits = computeTrackKmSplits(track);
 
   const compCanvas = document.createElement('canvas');
@@ -716,7 +716,7 @@ export async function recordStudio3DVideo({
   const { mimeType, extension } = pickSupportedVideoMimeType();
   const recorder = new MediaRecorder(combinedStream, {
     ...(mimeType ? { mimeType } : {}),
-    videoBitsPerSecond: exportConfig.quality === '1080p' ? 7_500_000 : 4_200_000,
+    videoBitsPerSecond: exportConfig.quality === '4k' ? (fps === 60 ? 38_000_000 : 26_000_000) : exportConfig.quality === '1080p' ? (fps === 60 ? 12_000_000 : 8_000_000) : (fps === 60 ? 6_500_000 : 4_500_000),
   });
 
   const chunks: BlobPart[] = [];

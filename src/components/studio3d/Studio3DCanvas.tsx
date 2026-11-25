@@ -283,7 +283,7 @@ const SceneContent: React.FC<
       let diff = rawRunnerYaw - smoothYawRef.current;
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
-      smoothYawRef.current += diff * (1 - Math.exp(-4.2 * dt));
+      smoothYawRef.current += diff * (1 - Math.exp(-7.8 * dt));
     }
     const effectiveMode = resolveEffectiveCameraMode(
       mapConfig.cameraMode,
@@ -426,20 +426,18 @@ const SceneContent: React.FC<
       initializedCamRef.current = true;
     } else {
       const lambda =
-        effectiveMode === 'overview' || effectiveMode === 'birds-eye'
-          ? 3.4
+        effectiveMode === 'overview'
+          ? 4.5
           : effectiveMode === 'finish-pose'
-            ? 4.0
-            : effectiveMode === 'drone-180' || effectiveMode === 'follow-20m'
-              ? 4.6
-              : 5.5;
+            ? 5.2
+            : 11.5;
       camera.position.x = THREE.MathUtils.damp(camera.position.x, camTargetPosRef.current.x, lambda, dt);
       camera.position.y = THREE.MathUtils.damp(camera.position.y, camTargetPosRef.current.y, lambda, dt);
       camera.position.z = THREE.MathUtils.damp(camera.position.z, camTargetPosRef.current.z, lambda, dt);
 
-      smoothLookAtRef.current.x = THREE.MathUtils.damp(smoothLookAtRef.current.x, camLookTargetRef.current.x, lambda + 1.5, dt);
-      smoothLookAtRef.current.y = THREE.MathUtils.damp(smoothLookAtRef.current.y, camLookTargetRef.current.y, lambda + 1.5, dt);
-      smoothLookAtRef.current.z = THREE.MathUtils.damp(smoothLookAtRef.current.z, camLookTargetRef.current.z, lambda + 1.5, dt);
+      smoothLookAtRef.current.x = THREE.MathUtils.damp(smoothLookAtRef.current.x, camLookTargetRef.current.x, lambda + 3.5, dt);
+      smoothLookAtRef.current.y = THREE.MathUtils.damp(smoothLookAtRef.current.y, camLookTargetRef.current.y, lambda + 3.5, dt);
+      smoothLookAtRef.current.z = THREE.MathUtils.damp(smoothLookAtRef.current.z, camLookTargetRef.current.z, lambda + 3.5, dt);
       camera.lookAt(smoothLookAtRef.current);
     }
 
