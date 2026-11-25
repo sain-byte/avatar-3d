@@ -1361,7 +1361,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                 onClick={() => handleQuickCamera(btn.id)}
                 className={`h-8 px-3 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
                   mapConfig.cameraMode === btn.id
-                    ? 'bg-slate-900 dark:bg-blue-600 text-white'
+                    ? 'bg-slate-900 dark:bg-orange-500 text-white'
                     : 'text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
@@ -1535,6 +1535,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
               className="w-5 h-5 rounded border border-slate-300 dark:border-slate-700 bg-transparent p-0 cursor-pointer"
             />
           </div>
+        </div>
         </div>
       </section>
 
