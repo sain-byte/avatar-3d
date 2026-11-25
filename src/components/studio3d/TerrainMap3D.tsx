@@ -57,6 +57,7 @@ interface TerrainMap3DProps {
   buildings3d: boolean;
   showKmPins?: boolean;
   showRouteGlow?: boolean;
+  routeThickness?: 'thin' | 'normal' | 'thick';
   isNight: boolean;
   jerseyColor: string;
   routeProgress: number;
@@ -415,6 +416,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
   buildings3d,
   showKmPins = false,
   showRouteGlow = false,
+  routeThickness = 'thin',
   isNight,
   routeProgress,
   groundedPath,
