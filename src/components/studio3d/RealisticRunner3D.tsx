@@ -239,7 +239,6 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
         ponytailRef.current.rotation.x =
           0.32 + Math.min(0.4, pose.bounceY * 2.2) + gait.forwardLean * 0.55;
       }
-    }
   });
 
   const isFemale = config.gender === 'female';
