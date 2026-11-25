@@ -50,6 +50,8 @@ import { Studio3DAudioEngine } from '../../utils/studio3dAudio';
 import {
   computeMiniMapGeometry,
   computeStartFinishBannerState,
+  computeTrackKmSplits,
+  getCompletedKmSplits,
   getExportDurationSec,
   recordStudio3DVideo,
   sampleTrackTelemetryAtProgress,
@@ -328,6 +330,55 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
         ? sampleTrackTelemetryAtProgress(activeTrack, progress, exportConfig.includeFinishPose)
         : null,
     [activeTrack, progress, exportConfig.includeFinishPose],
+  );
+
+  
+  useEffect(() => {
+    if (!track || track.points.length === 0) return;
+    const isRawCoords = /^-?\d+\.\d+\s*,\s*-?\d+\.\d+$/.test(track.location.trim());
+    if (!isRawCoords && track.location && track.location !== 'Indonesia') return;
+
+    const controller = new AbortController();
+    const pt = track.points[0];
+    void fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${pt.lat}&lon=${pt.lon}&format=json&zoom=10&addressdetails=1`,
+      {
+        signal: controller.signal,
+        headers: { 'Accept-Language': 'id,en' },
+      },
+    )
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data || controller.signal.aborted) return;
+        const addr = data.address || {};
+        const cityOrRegency =
+          addr.city ||
+          addr.county ||
+          addr.regency ||
+          addr.municipality ||
+          addr.town ||
+          addr.state_district;
+        const state = addr.state;
+        const resolved = [cityOrRegency, state].filter(Boolean).join(', ');
+        if (resolved) {
+          setTrack((prev) => (prev && prev.id === track.id ? { ...prev, location: resolved } : prev));
+        }
+      })
+      .catch(() => {
+        // Fallback ke koordinat jika offline
+      });
+
+    return () => controller.abort();
+  }, [track?.id]);
+
+  const allKmSplits = useMemo(() => (activeTrack ? computeTrackKmSplits(activeTrack) : []), [activeTrack]);
+
+  const visibleKmSplits = useMemo(
+    () =>
+      liveTelemetry
+        ? getCompletedKmSplits(allKmSplits, liveTelemetry.distanceKm, liveTelemetry.isFinishPhase)
+        : [],
+    [allKmSplits, liveTelemetry],
   );
 
   const bannerState = useMemo(
@@ -748,10 +799,10 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
         data-testid="studio3d-preview-stage"
         className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col items-center gap-3.5"
       >
-        <div className="w-full max-w-[780px] flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div className="w-full max-w-[780px] flex items-center justify-between gap-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
           <div
             data-testid="studio3d-map-status"
-            className="font-mono-tabular text-[11px] font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"
+            className="font-mono-tabular text-[11px] font-medium text-slate-600 dark:text-slate-300 flex items-center gap-1.5 min-w-0 truncate"
           >
             <span
               className={`w-2 h-2 rounded-full shrink-0 ${
@@ -764,18 +815,18 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                       : 'bg-rose-500'
               }`}
             />
-            <span>
+            <span className="truncate">
               {!track
-                ? 'Menunggu file .FIT / .GPX atau riwayat lari GPS'
+                ? 'Upload GPX/FIT'
                 : isMapLoading
-                  ? 'Memuat Peta OpenFreeMap...'
+                  ? 'Memuat peta...'
                   : mapLoadStatus.phase === 'ready'
-                    ? `OpenFreeMap (${mapConfig.mapStyle === 'dark' ? 'Night' : 'Light'}) · ${mapConfig.buildings3d ? '3D ON' : '3D OFF'}`
-                    : 'Peta gagal dimuat · coba Muat Peta'}
+                    ? 'OpenFreeMap'
+                    : 'Gagal muat'}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={() => setMapConfig((prev) => ({ ...prev, mapStyle: 'light' }))}
@@ -894,8 +945,8 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   }}
                 >
                   <div className="min-w-0 space-y-0.5">
-                    <p className="font-mono-tabular text-[9px] font-bold tracking-wider text-emerald-400 truncate">
-                      SPORTBYTE · #{runner.bibNumber || '001'}
+                    <p className="font-mono-tabular text-[10px] font-extrabold tracking-wider text-emerald-400 uppercase truncate">
+                      {runner.runnerName || 'Pelari'}
                     </p>
                     <p className="font-display text-sm font-bold text-white truncate">
                       {activeTrack.title}
@@ -905,6 +956,36 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                     </p>
                   </div>
                 </div>
+
+                {visibleKmSplits.length > 0 && (
+                  <div
+                    data-testid="studio3d-km-splits"
+                    className="pointer-events-none absolute top-[84px] left-3.5 z-10 flex flex-col gap-1"
+                  >
+                    {visibleKmSplits.map((sp, idx) => {
+                      const isNewest = idx === visibleKmSplits.length - 1;
+                      return (
+                        <div
+                          key={sp.index}
+                          className={`rounded-lg bg-slate-950/88 px-2.5 py-1 border font-mono-tabular text-[10px] font-bold flex items-center gap-1.5 shadow-md transition-all ${
+                            isNewest
+                              ? 'border-emerald-400/70 text-white opacity-95'
+                              : idx === 0 && visibleKmSplits.length === 3
+                                ? 'border-white/15 text-slate-300 opacity-65'
+                                : 'border-white/20 text-slate-100 opacity-85'
+                          }`}
+                        >
+                          <span className={isNewest ? 'text-emerald-400 font-extrabold' : 'text-sky-300'}>
+                            {sp.label} :
+                          </span>
+                          <span>
+                            {formatPace(sp.avgPaceSecPerKm)}/km · {sp.avgHr} bpm
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {miniMap && (
                   <div
@@ -962,7 +1043,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                         {activeTrack.totalDistanceKm.toFixed(2)} KM · {activeTrack.location}
                       </p>
                       <p className="font-mono-tabular text-[10px] font-semibold text-emerald-200 truncate">
-                        #{runner.bibNumber || '001'} {runner.runnerName || 'Pelari'}
+                        {runner.runnerName || 'Pelari'}
                       </p>
                     </div>
                   </div>
@@ -971,7 +1052,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                 {bannerState.finishAlpha > 0.02 && (
                   <div
                     data-testid="studio3d-finish-banner"
-                    className="pointer-events-none absolute top-[96px] inset-x-3.5 z-10 rounded-2xl bg-slate-950/92 border border-orange-500/75 px-3 py-2.5 flex items-center gap-2.5 shadow-xl"
+                    className="pointer-events-none absolute top-[172px] inset-x-3.5 z-10 rounded-2xl bg-slate-950/92 border border-orange-500/75 px-3 py-2.5 flex items-center gap-2.5 shadow-xl"
                     style={{
                       opacity: bannerState.finishAlpha,
                       transform: `translateY(${(bannerState.finishOffsetY * 0.5).toFixed(1)}px)`,
@@ -982,7 +1063,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                     </span>
                     <div className="min-w-0">
                       <p className="font-display text-xs font-bold text-white truncate">
-                        {runner.runnerName || 'Pelari'} · #{runner.bibNumber || '001'}
+                        {runner.runnerName || 'Pelari'}
                       </p>
                       <p className="font-mono-tabular text-[10px] font-bold text-amber-200 truncate">
                         {activeTrack.totalDistanceKm.toFixed(2)} km · {formatDuration(activeTrack.totalDurationSec)} ·{' '}
@@ -1144,7 +1225,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
         </div>
 
         <div className="w-full max-w-[780px] pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center gap-2.5">
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
+          <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-1">
             {(
               [
                 { id: 'auto', label: 'Auto', icon: <Sparkles className="w-3.5 h-3.5" aria-hidden="true" /> },

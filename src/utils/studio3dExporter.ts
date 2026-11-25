@@ -16,6 +16,83 @@ export interface Studio3DFrameTelemetry {
   isFinishPhase: boolean;
 }
 
+export interface KmSplitItem {
+  index: number;
+  label: string;
+  startKm: number;
+  endKm: number;
+  avgPaceSecPerKm: number;
+  avgHr: number;
+  isPartial: boolean;
+}
+
+export function computeTrackKmSplits(track: Studio3DTrack): KmSplitItem[] {
+  const pts = track.points;
+  const totalKm = track.totalDistanceKm;
+  if (pts.length < 2 || totalKm < 0.08) return [];
+
+  const boundaries: Array<{ startKm: number; endKm: number; label: string; isPartial: boolean }> = [];
+  const fullKms = Math.floor(totalKm);
+  const remainder = totalKm - fullKms;
+
+  for (let k = 1; k <= fullKms; k += 1) {
+    const isLastWithTinyTail = k === fullKms && remainder > 0 && remainder < 0.05;
+    boundaries.push({
+      startKm: k - 1,
+      endKm: isLastWithTinyTail ? totalKm : k,
+      label: String(k).padStart(2, '0'),
+      isPartial: false,
+    });
+  }
+
+  if (remainder >= 0.05) {
+    const roundedRem = Math.max(0.1, Math.round(remainder * 10) / 10);
+    boundaries.push({
+      startKm: fullKms,
+      endKm: totalKm,
+      label: roundedRem.toFixed(1),
+      isPartial: true,
+    });
+  }
+
+  return boundaries.map((b, idx) => {
+    const pStart = sampleTrackPointByDistance(pts, totalKm, Math.min(1, b.startKm / totalKm));
+    const pEnd = sampleTrackPointByDistance(pts, totalKm, Math.min(1, b.endKm / totalKm));
+    const segDist = Math.max(0.02, b.endKm - b.startKm);
+    const segSec = Math.max(1, pEnd.elapsedSec - pStart.elapsedSec);
+    const avgPaceSecPerKm = Math.round(segSec / segDist);
+
+    const inSeg = pts.filter((pt) => pt.distanceKm >= b.startKm && pt.distanceKm <= b.endKm);
+    const avgHr =
+      inSeg.length > 0
+        ? Math.round(inSeg.reduce((acc, p) => acc + p.hr, 0) / inSeg.length)
+        : Math.round((pStart.hr + pEnd.hr) * 0.5);
+
+    return {
+      index: idx + 1,
+      label: b.label,
+      startKm: b.startKm,
+      endKm: b.endKm,
+      avgPaceSecPerKm,
+      avgHr,
+      isPartial: b.isPartial,
+    };
+  });
+}
+
+export function getCompletedKmSplits(
+  allSplits: KmSplitItem[],
+  currentDistanceKm: number,
+  isFinishPhase: boolean,
+): KmSplitItem[] {
+  if (allSplits.length === 0) return [];
+  const completed = allSplits.filter((sp) =>
+    isFinishPhase ? true : currentDistanceKm >= sp.endKm - 0.005,
+  );
+  // Tampilkan 3 split terbaru secara rolling agar layar tetap lega
+  return completed.slice(-3);
+}
+
 export function getExportDurationSec(config: ExportConfig): number {
   if (config.durationPreset === 'custom') {
     return Math.min(180, Math.max(5, Math.round(config.customDurationSec || 25)));
@@ -200,10 +277,11 @@ function paintBroadcastHudOverlay(params: {
   track: Studio3DTrack;
   runner: RunnerConfig;
   telemetry: Studio3DFrameTelemetry;
+  allSplits: KmSplitItem[];
   progress: number;
   includeFinishPose: boolean;
 }) {
-  const { ctx, width, height, track, runner, telemetry, progress, includeFinishPose } = params;
+  const { ctx, width, height, track, runner, telemetry, allSplits, progress, includeFinishPose } = params;
   const s = width / 720;
   const finishThreshold = includeFinishPose ? 0.88 : 1.0;
   const routeProgress = Math.min(1, Math.max(0, progress / finishThreshold));
@@ -223,24 +301,27 @@ function paintBroadcastHudOverlay(params: {
   ctx.fillRect(0, height - 350 * s, width, 350 * s);
 
   const padX = 36 * s;
+  const runnerLabel = (runner.runnerName || 'Pelari').trim().toUpperCase().slice(0, 24);
 
+  // Header Kiri Atas: Baris 1 Nama Pelari, Baris 2 Nama Aktivitas GPX, Baris 3 Tanggal + Kota/Kabupaten
   ctx.textAlign = 'left';
-  ctx.fillStyle = 'rgba(16, 185, 129, 0.95)';
-  ctx.font = `700 ${Math.round(13 * s)}px JetBrains Mono, monospace`;
-  ctx.fillText(`SPORTBYTE 路 #${(runner.bibNumber || '001').slice(0, 8)}`, padX, 46 * s);
+  ctx.fillStyle = 'rgba(52, 211, 153, 0.96)';
+  ctx.font = `800 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
+  ctx.fillText(runnerLabel, padX, 46 * s);
 
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = `700 ${Math.round(26 * s)}px Outfit, sans-serif`;
-  ctx.fillText(track.title.slice(0, 24), padX, 78 * s);
+  ctx.font = `700 ${Math.round(25 * s)}px Outfit, sans-serif`;
+  ctx.fillText(track.title.slice(0, 26), padX, 78 * s);
 
-  ctx.fillStyle = 'rgba(226, 232, 240, 0.86)';
-  ctx.font = `600 ${Math.round(15 * s)}px JetBrains Mono, monospace`;
+  ctx.fillStyle = 'rgba(226, 232, 240, 0.88)';
+  ctx.font = `600 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
   ctx.fillText(
-    `${track.date} 路 ${track.location.slice(0, 22)}`,
+    `${track.date} · ${track.location.slice(0, 26)}`,
     padX,
     104 * s,
   );
 
+  // Mini GPS Radar Kanan Atas
   const mmSize = 114 * s;
   const mmX = width - padX - mmSize;
   const mmY = 30 * s;
@@ -284,6 +365,44 @@ function paintBroadcastHudOverlay(params: {
     ctx.restore();
   }
 
+  // Km Splits Ticker (Rolling 3 baris terbaru) di bawah header kiri atas
+  const visibleSplits = getCompletedKmSplits(
+    allSplits,
+    telemetry.distanceKm,
+    telemetry.isFinishPhase,
+  );
+  if (visibleSplits.length > 0) {
+    const pillW = 308 * s;
+    const pillH = 38 * s;
+    const startSplitY = 126 * s;
+
+    visibleSplits.forEach((sp, idx) => {
+      const sy = startSplitY + idx * (pillH + 7 * s);
+      const isNewest = idx === visibleSplits.length - 1;
+      ctx.save();
+      ctx.globalAlpha = isNewest ? 0.96 : idx === 0 && visibleSplits.length === 3 ? 0.68 : 0.84;
+      drawRoundedRect(ctx, padX, sy, pillW, pillH, 10 * s);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.fill();
+      ctx.strokeStyle = isNewest ? 'rgba(52, 211, 153, 0.7)' : 'rgba(255, 255, 255, 0.16)';
+      ctx.lineWidth = Math.max(1, 1.3 * s);
+      ctx.stroke();
+
+      ctx.fillStyle = isNewest ? '#34D399' : '#93C5FD';
+      ctx.font = `800 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
+      ctx.fillText(`${sp.label} :`, padX + 12 * s, sy + 24 * s);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = `700 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
+      ctx.fillText(
+        `${formatPace(sp.avgPaceSecPerKm)}/km · ${sp.avgHr} bpm`,
+        padX + 68 * s,
+        sy + 24 * s,
+      );
+      ctx.restore();
+    });
+  }
+
   const banner = computeStartFinishBannerState(progress, includeFinishPose);
 
   if (banner.startAlpha > 0.02) {
@@ -314,14 +433,14 @@ function paintBroadcastHudOverlay(params: {
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `700 ${Math.round(21 * s)}px Outfit, sans-serif`;
     ctx.fillText(
-      `${track.totalDistanceKm.toFixed(2)} KM 路 ${track.location.slice(0, 22)}`,
+      `${track.totalDistanceKm.toFixed(2)} KM · ${track.location.slice(0, 22)}`,
       bx + 132 * s,
       by + 42 * s,
     );
     ctx.fillStyle = '#A7F3D0';
     ctx.font = `600 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
     ctx.fillText(
-      `#${runner.bibNumber || '001'} ${(runner.runnerName || 'Pelari').slice(0, 22)}`,
+      (runner.runnerName || 'Pelari').slice(0, 26),
       bx + 132 * s,
       by + 66 * s,
     );
@@ -334,7 +453,7 @@ function paintBroadcastHudOverlay(params: {
     const bx = padX;
     const bw = width - padX * 2;
     const bh = 104 * s;
-    const by = (162 + banner.finishOffsetY) * s;
+    const by = (280 + banner.finishOffsetY) * s;
 
     drawRoundedRect(ctx, bx, by, bw, bh, 20 * s);
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
@@ -356,20 +475,21 @@ function paintBroadcastHudOverlay(params: {
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `700 ${Math.round(21 * s)}px Outfit, sans-serif`;
     ctx.fillText(
-      `${(runner.runnerName || 'Pelari').slice(0, 22)} 路 #${runner.bibNumber || '001'}`,
+      (runner.runnerName || 'Pelari').slice(0, 26),
       bx + 142 * s,
       by + 44 * s,
     );
     ctx.fillStyle = '#FDE68A';
     ctx.font = `700 ${Math.round(16 * s)}px JetBrains Mono, monospace`;
     ctx.fillText(
-      `${track.totalDistanceKm.toFixed(2)} km 路 ${formatDuration(track.totalDurationSec)} 路 ${formatPace(track.avgPaceSecPerKm)}/km`,
+      `${track.totalDistanceKm.toFixed(2)} km · ${formatDuration(track.totalDurationSec)} · ${formatPace(track.avgPaceSecPerKm)}/km`,
       bx + 142 * s,
       by + 74 * s,
     );
     ctx.restore();
   }
 
+  // Kartu Telemetri Bawah
   const cardX = padX;
   const cardW = width - padX * 2;
   const cardH = 248 * s;
@@ -397,7 +517,7 @@ function paintBroadcastHudOverlay(params: {
   ctx.fillStyle = telemetry.isFinishPhase ? '#34D399' : '#E2E8F0';
   ctx.font = `700 ${Math.round(18 * s)}px JetBrains Mono, monospace`;
   ctx.fillText(
-    telemetry.isFinishPhase ? `FINISH 路 ${formatDuration(telemetry.elapsedSec)}` : formatDuration(telemetry.elapsedSec),
+    telemetry.isFinishPhase ? `FINISH · ${formatDuration(telemetry.elapsedSec)}` : formatDuration(telemetry.elapsedSec),
     cardX + cardW - 24 * s,
     cardY + 45 * s,
   );
@@ -497,6 +617,7 @@ export async function recordStudio3DVideo({
   const height = exportConfig.quality === '1080p' ? 1920 : 1280;
   const durationSec = getExportDurationSec(exportConfig);
   const fps = 30;
+  const allSplits = computeTrackKmSplits(track);
 
   const compCanvas = document.createElement('canvas');
   compCanvas.width = width;
@@ -518,7 +639,6 @@ export async function recordStudio3DVideo({
   const canvasStream = compCanvas.captureStream(fps);
   const combinedStream = new MediaStream();
   canvasStream.getVideoTracks().forEach((t) => combinedStream.addTrack(t));
-
   if (exportConfig.musicPreset !== 'none') {
     const audioStream = audioEngine.getRecordingAudioStream();
     audioStream?.getAudioTracks().forEach((t) => combinedStream.addTrack(t));
@@ -594,6 +714,7 @@ export async function recordStudio3DVideo({
         track,
         runner,
         telemetry,
+        allSplits,
         progress: p,
         includeFinishPose: exportConfig.includeFinishPose,
       });

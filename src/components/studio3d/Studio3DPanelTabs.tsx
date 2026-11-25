@@ -389,28 +389,17 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
             <section className="space-y-4 md:border-l md:border-slate-100 md:dark:border-slate-800 md:pl-6">
               <div className="space-y-2">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Identitas & Nomor BIB
+                  Nama Pelari (Overlay Video)
                 </h3>
-                <div className="grid grid-cols-3 gap-2">
-                  <input
-                    type="text"
-                    value={runner.runnerName}
-                    onChange={(e) =>
-                      onChangeRunner((prev) => ({ ...prev, runnerName: e.target.value }))
-                    }
-                    placeholder="Nama Pelari"
-                    className="col-span-2 h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-900 dark:text-white"
-                  />
-                  <input
-                    type="text"
-                    value={runner.bibNumber}
-                    onChange={(e) =>
-                      onChangeRunner((prev) => ({ ...prev, bibNumber: e.target.value }))
-                    }
-                    placeholder="BIB"
-                    className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-mono-tabular text-xs font-bold text-center text-slate-900 dark:text-white"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={runner.runnerName}
+                  onChange={(e) =>
+                    onChangeRunner((prev) => ({ ...prev, runnerName: e.target.value }))
+                  }
+                  placeholder="Nama Pelari"
+                  className="w-full h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-900 dark:text-white"
+                />
               </div>
 
               <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
