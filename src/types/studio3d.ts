@@ -76,6 +76,7 @@ export interface MapConfig {
   routeSnapMode?: RouteSnapMode3D;
   overlayColor?: string;
   overlayTextColor?: string;
+  overlayBox?: boolean;
 }
 
 export type DurationPresetSec = 15 | 30 | 45 | 60 | 'custom';
@@ -172,6 +173,7 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   routeSnapMode: 'raw',
   overlayColor: '#F97316',
   overlayTextColor: 'auto',
+  overlayBox: true,
 };
 
 export const DEFAULT_EXPORT_CONFIG: ExportConfig = {

@@ -574,7 +574,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
         {activeTab === 'peta' && (
           <div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            data-testid="studio3d-panel-peta"
+            data-testid="studio3d-panel-peta" style={{ animation: "fadeSlideIn 220ms ease-out" }}
           >
             {/* Kolom 1: Mode Peta OpenFreeMap (Light/Night) & Bangunan 3D */}
             <section className="space-y-4">
@@ -857,7 +857,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
         {activeTab === 'export' && (
           <div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            data-testid="studio3d-panel-export"
+            data-testid="studio3d-panel-export" style={{ animation: "fadeSlideIn 220ms ease-out" }}
           >
             {/* Kolom 1: Durasi & Resolusi */}
             <section className="space-y-4">

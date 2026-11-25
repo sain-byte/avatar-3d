@@ -312,6 +312,35 @@ function smoothTrackCoordinates(points: Studio3DTrackPoint[]): Array<{ x: number
   return out;
 }
 
+
+function smoothSpatialSamples(
+  raw: Array<{ x: number; z: number; progress: number }>,
+): Array<{ x: number; z: number; progress: number }> {
+  if (raw.length < 4) return raw;
+  let pts = raw.map((p) => ({ ...p }));
+  // 2 passes of Chaikin smoothing to eliminate GPS zig-zag jitter while keeping endpoints pinned
+  for (let pass = 0; pass < 2; pass += 1) {
+    const next: Array<{ x: number; z: number; progress: number }> = [pts[0]];
+    for (let i = 0; i < pts.length - 1; i += 1) {
+      const a = pts[i];
+      const b = pts[i + 1];
+      next.push({
+        x: a.x * 0.75 + b.x * 0.25,
+        z: a.z * 0.75 + b.z * 0.25,
+        progress: a.progress * 0.75 + b.progress * 0.25,
+      });
+      next.push({
+        x: a.x * 0.25 + b.x * 0.75,
+        z: a.z * 0.25 + b.z * 0.75,
+        progress: a.progress * 0.25 + b.progress * 0.75,
+      });
+    }
+    next.push(pts[pts.length - 1]);
+    pts = next;
+  }
+  return pts;
+}
+
 export function buildGroundedRoutePath(
   points: Studio3DTrackPoint[],
   sampleGroundY: (xM: number, zM: number) => number,

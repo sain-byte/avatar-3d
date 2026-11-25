@@ -154,6 +154,24 @@ function add3DBuildingsToMap(map: maplibregl.Map, mode: MapMode3D, enabled: bool
   );
 }
 
+
+function smoothGeoCoords(coords: number[][]): number[][] {
+  if (coords.length < 4) return coords;
+  let pts = coords;
+  for (let pass = 0; pass < 2; pass += 1) {
+    const next: number[][] = [pts[0]];
+    for (let i = 0; i < pts.length - 1; i += 1) {
+      const a = pts[i];
+      const b = pts[i + 1];
+      next.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25]);
+      next.push([a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]);
+    }
+    next.push(pts[pts.length - 1]);
+    pts = next;
+  }
+  return pts;
+}
+
 function syncHairlineRouteOnMap(
   map: maplibregl.Map,
   track: Studio3DTrack,
@@ -163,7 +181,7 @@ function syncHairlineRouteOnMap(
 ) {
   if (!map.isStyleLoaded() || track.points.length < 2) return;
 
-  const fullCoords = track.points.map((p) => [p.lon, p.lat]);
+  const fullCoords = smoothGeoCoords(track.points.map((p) => [p.lon, p.lat]));
   const activeCount = Math.max(
     2,
     Math.min(fullCoords.length, Math.ceil(routeProgress * (fullCoords.length - 1)) + 1),
