@@ -453,6 +453,48 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
   }, [track?.id]);
 
   
+  const overlayTheme: OverlayTheme3D = mapConfig.overlayTheme ?? 'kalcer';
+  const overlayAccent = mapConfig.overlayColor || '#F97316';
+  const showOverlayPanel = overlayTheme !== 'off';
+  const useOverlayBox =
+    overlayTheme === 'off'
+      ? false
+      : overlayTheme === 'editorial'
+        ? false
+        : overlayTheme === 'kalcer' || overlayTheme === 'neon' || overlayTheme === 'telemetry'
+          ? (mapConfig.overlayBox ?? true)
+          : (mapConfig.overlayBox ?? true);
+
+  const getOverlaySurfaceClass = (kind: 'top' | 'bottom' | 'finish') => {
+    if (!useOverlayBox) {
+      return kind === 'top' ? 'py-0.5' : '';
+    }
+    if (overlayTheme === 'neon') {
+      return kind === 'top'
+        ? 'rounded-xl bg-slate-950/80 backdrop-blur-xs border px-2.5 py-1.5 shadow-md'
+        : kind === 'finish'
+          ? 'rounded-2xl bg-slate-950/85 backdrop-blur-xs border px-3 py-2.5 shadow-lg'
+          : 'rounded-2xl bg-slate-950/80 backdrop-blur-xs border px-3 py-2 shadow-lg';
+    }
+    if (overlayTheme === 'telemetry') {
+      return kind === 'top'
+        ? 'rounded-lg bg-slate-950/70 backdrop-blur-xs border border-white/30 px-2.5 py-1.5 shadow-md'
+        : kind === 'finish'
+          ? 'rounded-xl bg-slate-950/75 backdrop-blur-xs border border-white/30 px-3 py-2.5 shadow-lg'
+          : 'rounded-xl bg-slate-950/72 backdrop-blur-xs border border-white/30 px-3 py-2 shadow-lg';
+    }
+    return kind === 'top'
+      ? 'rounded-xl bg-slate-950/55 backdrop-blur-xs border border-white/25 px-2.5 py-1.5 shadow-md'
+      : kind === 'finish'
+        ? 'rounded-2xl bg-slate-950/58 backdrop-blur-xs border border-white/25 px-3 py-2.5 shadow-lg'
+        : 'rounded-2xl bg-slate-950/56 backdrop-blur-xs border border-white/25 px-3 py-2 shadow-lg';
+  };
+
+  const getOverlaySurfaceStyle = () =>
+    overlayTheme === 'neon' && useOverlayBox
+      ? { borderColor: overlayAccent, boxShadow: `0 0 14px ${overlayAccent}55` }
+      : undefined;
+
   const effectiveOverlayTextColor =
     !mapConfig.overlayTextColor || mapConfig.overlayTextColor === 'auto'
       ? mapConfig.mapStyle === 'dark' || mapConfig.mapStyle === 'satellite'
@@ -938,22 +980,20 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   />
                 </div>
 
+                {showOverlayPanel && (
                 <div
                   className="pointer-events-none absolute top-0 inset-x-0 pt-5 pb-2 px-3 z-10"
                   style={{
-                    color: (mapConfig.overlayBox ?? true) ? '#FFFFFF' : effectiveOverlayTextColor,
-                    textShadow: (mapConfig.overlayBox ?? true)
+                    color: useOverlayBox ? '#FFFFFF' : effectiveOverlayTextColor,
+                    textShadow: useOverlayBox
                       ? '0 1px 3px rgba(0,0,0,0.85)'
                       : overlayTextShadow,
                   }}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div
-                      className={`h-14 flex flex-col justify-between min-w-0 flex-1 transition-all duration-200 ${
-                        (mapConfig.overlayBox ?? true)
-                          ? 'rounded-xl bg-slate-950/55 backdrop-blur-xs border border-white/25 px-2.5 py-1.5 shadow-md'
-                          : 'py-0.5'
-                      }`}
+                      className={`h-14 flex flex-col justify-between min-w-0 flex-1 transition-all duration-200 ${getOverlaySurfaceClass('top')}`}
+                      style={getOverlaySurfaceStyle()}
                     >
                       <p
                         className="font-mono-tabular text-[10px] font-extrabold tracking-wide truncate leading-none"
@@ -1044,6 +1084,10 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   )}
                 </div>
 
+                </div>
+                )}
+
+                {showOverlayPanel && (
                 <div
                   className="pointer-events-none absolute bottom-0 inset-x-0 pb-3 px-3 z-10"
                   style={{
@@ -1056,12 +1100,9 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   {bannerState.finishAlpha > 0.15 ? (
                     <div
                       data-testid="studio3d-finish-banner"
-                      className={`space-y-2 text-center transition-all duration-200 ${
-                        (mapConfig.overlayBox ?? true)
-                          ? 'rounded-2xl bg-slate-950/58 backdrop-blur-xs border border-white/25 px-3 py-2.5 shadow-lg'
-                          : ''
-                      }`}
+                      className={`space-y-2 text-center transition-all duration-200 ${getOverlaySurfaceClass('finish')}`}
                       style={{
+                        ...(getOverlaySurfaceStyle() ?? {}),
                         opacity: bannerState.finishAlpha,
                         transform: `translateY(${(bannerState.finishOffsetY * 0.35).toFixed(1)}px)`,
                       }}
@@ -1134,11 +1175,8 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                     </div>
                   ) : (
                     <div
-                      className={`space-y-1.5 transition-all duration-200 ${
-                        (mapConfig.overlayBox ?? true)
-                          ? 'rounded-2xl bg-slate-950/56 backdrop-blur-xs border border-white/25 px-3 py-2 shadow-lg'
-                          : ''
-                      }`}
+                      className={`space-y-1.5 transition-all duration-200 ${getOverlaySurfaceClass('bottom')}`}
+                      style={getOverlaySurfaceStyle()}
                     >
                       <div className="flex items-baseline justify-between gap-2">
                         <div className="min-w-0 truncate">
@@ -1220,6 +1258,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                     </div>
                   )}
                 </div>
+                )}
 </>
             )}
           </div>
@@ -1410,6 +1449,39 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
             <span className="font-mono-tabular text-[10px] font-semibold text-slate-500 dark:text-slate-400">
               Teks:
             </span>
+            <div className="flex flex-wrap items-center gap-1 w-full pb-1">
+              {(
+                [
+                  { id: 'kalcer', label: 'Kalcer Glass' },
+                  { id: 'editorial', label: 'Editorial' },
+                  { id: 'neon', label: 'Neon Night' },
+                  { id: 'telemetry', label: 'Telemetry' },
+                  { id: 'off', label: 'Polos (Off)' },
+                ] as Array<{ id: OverlayTheme3D; label: string }>
+              ).map((thm) => {
+                const isSelected = overlayTheme === thm.id;
+                return (
+                  <button
+                    key={thm.id}
+                    type="button"
+                    onClick={() =>
+                      setMapConfig((prev) => ({
+                        ...prev,
+                        overlayTheme: thm.id,
+                        overlayBox: thm.id === 'editorial' || thm.id === 'off' ? false : true,
+                      }))
+                    }
+                    className={`px-2 py-0.5 rounded-md font-semibold text-[10px] border transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-orange-500 text-white border-orange-500'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    {thm.label}
+                  </button>
+                );
+              })}
+            </div>
             <button
               type="button"
               onClick={() =>

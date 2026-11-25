@@ -64,6 +64,7 @@ export type RouteVisualStyle3D =
   | 'sport-jersey'
   | 'minimal-clean';
 export type RouteSnapMode3D = 'raw' | 'snap-road';
+export type OverlayTheme3D = 'kalcer' | 'editorial' | 'neon' | 'telemetry' | 'off';
 
 export interface MapConfig {
   cameraMode: CameraMode3D;
@@ -77,6 +78,7 @@ export interface MapConfig {
   overlayColor?: string;
   overlayTextColor?: string;
   overlayBox?: boolean;
+  overlayTheme?: OverlayTheme3D;
   showKmPins?: boolean;
   showRouteGlow?: boolean;
   routeThickness?: 'thin' | 'normal' | 'thick';
