@@ -324,71 +324,72 @@ function paintBroadcastHudOverlay(params: {
     includeFinishPose,
   } = params;
   const txtPalette = resolveOverlayPrimaryText(textColorMode, mapStyle);
-  const s = (width / 720) * 0.84;
+  // Skala 1:1 berdasarkan viewport preview ponsel 320x568 agar hasil export identik dengan preview
+  const s = width / 320;
   const finishThreshold = includeFinishPose ? 0.88 : 1.0;
   const routeProgress = Math.min(1, Math.max(0, progress / finishThreshold));
 
-  const padX = Math.round(width * 0.042);
-  const topY = Math.round(height * 0.022);
-  const mmSize = 76 * s;
+  const padX = 12 * s;
+  const topY = 12 * s;
+  const mmSize = 56 * s;
   const runnerNameClean = (runner.runnerName || 'Atlet Kalcer').trim().slice(0, 24);
   const locationClean = (track.location || '').trim();
   const metaSubline = locationClean
     ? `${track.date} · ${locationClean.slice(0, 24)}`
     : track.date;
 
-  // Kotak kaca opsional untuk Header Kiri Atas (sejajar tinggi kotak GPS)
-  const headerBoxW = width - padX * 2 - mmSize - 12 * s;
+  // Kotak kaca opsional untuk Header Kiri Atas (sejajar tinggi w-14 h-14 kotak GPS)
+  const headerBoxW = width - padX * 2 - mmSize - 8 * s;
   if (useGlassBox) {
-    drawRoundedRect(ctx, padX, topY, headerBoxW, mmSize, 14 * s);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.52)';
+    drawRoundedRect(ctx, padX, topY, headerBoxW, mmSize, 12 * s);
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.52)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.26)';
-    ctx.lineWidth = Math.max(1, 1.3 * s);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = Math.max(1, 0.8 * s);
     ctx.stroke();
   }
 
-  const hTextX = useGlassBox ? padX + 14 * s : padX;
+  const hTextX = useGlassBox ? padX + 10 * s : padX;
   ctx.save();
-  ctx.shadowColor = useGlassBox ? 'rgba(0, 0, 0, 0.75)' : txtPalette.shadow;
-  ctx.shadowBlur = 6 * s;
-  ctx.shadowOffsetY = 1.5 * s;
+  ctx.shadowColor = useGlassBox ? 'rgba(0, 0, 0, 0.72)' : txtPalette.shadow;
+  ctx.shadowBlur = 3 * s;
+  ctx.shadowOffsetY = 1 * s;
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = useGlassBox ? 'rgba(2, 6, 23, 0.65)' : txtPalette.stroke;
-  ctx.lineWidth = 2.6 * s;
+  ctx.strokeStyle = useGlassBox ? 'rgba(2, 6, 23, 0.55)' : txtPalette.stroke;
+  ctx.lineWidth = 1.4 * s;
 
   ctx.textAlign = 'left';
-  ctx.font = `800 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
-  ctx.strokeText(runnerNameClean, hTextX, topY + 21 * s);
+  ctx.font = `800 ${Math.round(9 * s)}px JetBrains Mono, monospace`;
+  ctx.strokeText(runnerNameClean, hTextX, topY + 14 * s);
   ctx.fillStyle = accentColor;
-  ctx.fillText(runnerNameClean, hTextX, topY + 21 * s);
+  ctx.fillText(runnerNameClean, hTextX, topY + 14 * s);
 
-  ctx.font = `700 ${Math.round(19 * s)}px Outfit, sans-serif`;
-  ctx.strokeText(track.title.slice(0, 22), hTextX, topY + 47 * s);
+  ctx.font = `700 ${Math.round(13 * s)}px Outfit, sans-serif`;
+  ctx.strokeText(track.title.slice(0, 22), hTextX, topY + 31 * s);
   ctx.fillStyle = useGlassBox ? '#FFFFFF' : txtPalette.primary;
-  ctx.fillText(track.title.slice(0, 22), hTextX, topY + 47 * s);
+  ctx.fillText(track.title.slice(0, 22), hTextX, topY + 31 * s);
 
-  ctx.font = `600 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
-  ctx.strokeText(metaSubline, hTextX, topY + 71 * s);
+  ctx.font = `500 ${Math.round(9 * s)}px JetBrains Mono, monospace`;
+  ctx.strokeText(metaSubline, hTextX, topY + 46 * s);
   ctx.fillStyle = useGlassBox ? '#F1F5F9' : txtPalette.secondary;
-  ctx.fillText(metaSubline, hTextX, topY + 71 * s);
+  ctx.fillText(metaSubline, hTextX, topY + 46 * s);
   ctx.restore();
 
-  // Mini GPS Radar Kanan Atas (sejajar topY)
+  // Mini GPS Radar Kanan Atas (w-14 h-14 = 56*s)
   const mmX = width - padX - mmSize;
   const mmY = topY;
-  drawRoundedRect(ctx, mmX, mmY, mmSize, mmSize, 14 * s);
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.52)';
+  drawRoundedRect(ctx, mmX, mmY, mmSize, mmSize, 12 * s);
+  ctx.fillStyle = 'rgba(2, 6, 23, 0.55)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
-  ctx.lineWidth = Math.max(1, 1.3 * s);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.lineWidth = Math.max(1, 0.8 * s);
   ctx.stroke();
 
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
-  ctx.fillText('GPS', mmX + 9 * s, mmY + 15 * s);
+  ctx.fillStyle = '#E2E8F0';
+  ctx.font = `700 ${Math.round(7 * s)}px JetBrains Mono, monospace`;
+  ctx.fillText('GPS', mmX + 6 * s, mmY + 10 * s);
 
-  const mmGeom = computeMiniMapGeometry(track, routeProgress, mmSize, 14 * s);
+  const mmGeom = computeMiniMapGeometry(track, routeProgress, mmSize, 9 * s);
   if (mmGeom.polyline.length >= 2) {
     ctx.save();
     ctx.beginPath();
@@ -397,35 +398,35 @@ function paintBroadcastHudOverlay(params: {
       ctx.lineTo(mmX + mmGeom.polyline[i].x, mmY + mmGeom.polyline[i].y);
     }
     ctx.strokeStyle = accentColor;
-    ctx.lineWidth = Math.max(1.8, 2.6 * s);
+    ctx.lineWidth = Math.max(1.5, 2.2 * s);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(mmX + mmGeom.startPt.x, mmY + mmGeom.startPt.y, 3 * s, 0, Math.PI * 2);
+    ctx.arc(mmX + mmGeom.startPt.x, mmY + mmGeom.startPt.y, 2.2 * s, 0, Math.PI * 2);
     ctx.fillStyle = '#A3E635';
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(mmX + mmGeom.runnerPt.x, mmY + mmGeom.runnerPt.y, 4.2 * s, 0, Math.PI * 2);
+    ctx.arc(mmX + mmGeom.runnerPt.x, mmY + mmGeom.runnerPt.y, 2.9 * s, 0, Math.PI * 2);
     ctx.fillStyle = '#FFFFFF';
     ctx.fill();
     ctx.strokeStyle = accentColor;
-    ctx.lineWidth = Math.max(1.2, 1.8 * s);
+    ctx.lineWidth = Math.max(1, 1.3 * s);
     ctx.stroke();
     ctx.restore();
   }
 
-  // Km Splits Permanen & Ringkas (Tanpa Avg HR agar bersih & cepat dibaca)
+  // Km Splits Permanen & Ringkas
   const visibleSplits = getCompletedKmSplits(
     allSplits,
     telemetry.distanceKm,
     telemetry.isFinishPhase,
   );
   if (visibleSplits.length > 0) {
-    const startSplitY = topY + mmSize + 12 * s;
-    const rowH = 27 * s;
+    const startSplitY = topY + mmSize + 8 * s;
+    const rowH = 18 * s;
 
     ctx.save();
     visibleSplits.forEach((sp, idx) => {
@@ -433,75 +434,75 @@ function paintBroadcastHudOverlay(params: {
       const isNewest = idx === visibleSplits.length - 1 && !telemetry.isFinishPhase;
 
       if (useGlassBox) {
-        drawRoundedRect(ctx, padX, sy, 142 * s, 22 * s, 7 * s);
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.50)';
+        drawRoundedRect(ctx, padX, sy, 96 * s, 15 * s, 5 * s);
+        ctx.fillStyle = 'rgba(2, 6, 23, 0.52)';
         ctx.fill();
         ctx.strokeStyle = isNewest ? 'rgba(163, 230, 53, 0.55)' : 'rgba(255, 255, 255, 0.20)';
-        ctx.lineWidth = Math.max(1, 1 * s);
+        ctx.lineWidth = Math.max(0.8, 0.7 * s);
         ctx.stroke();
       }
 
-      const tx = useGlassBox ? padX + 9 * s : padX;
-      ctx.shadowColor = useGlassBox ? 'rgba(0, 0, 0, 0.7)' : txtPalette.shadow;
-      ctx.shadowBlur = 5 * s;
+      const tx = useGlassBox ? padX + 6 * s : padX;
+      ctx.shadowColor = useGlassBox ? 'rgba(0, 0, 0, 0.65)' : txtPalette.shadow;
+      ctx.shadowBlur = 2.5 * s;
       ctx.lineJoin = 'round';
-      ctx.strokeStyle = useGlassBox ? 'rgba(2, 6, 23, 0.6)' : txtPalette.stroke;
-      ctx.lineWidth = 2.2 * s;
+      ctx.strokeStyle = useGlassBox ? 'rgba(2, 6, 23, 0.5)' : txtPalette.stroke;
+      ctx.lineWidth = 1.2 * s;
 
       ctx.textAlign = 'left';
-      ctx.font = `800 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
-      ctx.strokeText(`KM ${sp.label}`, tx, sy + 15 * s);
+      ctx.font = `800 ${Math.round(8.5 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(`KM ${sp.label}`, tx, sy + 10.5 * s);
       ctx.fillStyle = isNewest ? '#A3E635' : accentColor;
-      ctx.fillText(`KM ${sp.label}`, tx, sy + 15 * s);
+      ctx.fillText(`KM ${sp.label}`, tx, sy + 10.5 * s);
 
       const valText = `${formatPace(sp.avgPaceSecPerKm)}/km`;
-      ctx.font = `700 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
-      ctx.strokeText(valText, tx + 58 * s, sy + 15 * s);
+      ctx.font = `700 ${Math.round(8.5 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(valText, tx + 40 * s, sy + 10.5 * s);
       ctx.fillStyle = useGlassBox ? '#FFFFFF' : txtPalette.primary;
-      ctx.fillText(valText, tx + 58 * s, sy + 15 * s);
+      ctx.fillText(valText, tx + 40 * s, sy + 10.5 * s);
     });
     ctx.restore();
   }
 
   const banner = computeStartFinishBannerState(progress, includeFinishPose);
 
-  // Overlay Bawah (Rata Tengah + Opsi Kotak Kaca Transparan senada kotak GPS)
+  // Overlay Bawah (Proporsi 1:1 sesuai kartu bawah preview HP 320x568)
   ctx.save();
   const baseX = padX;
   const baseW = width - padX * 2;
   const colW = baseW / 3;
 
   if (banner.finishAlpha > 0.15) {
-    const cardH = 186 * s;
-    const topFinishY = height - cardH - 24 * s;
+    const cardH = 132 * s;
+    const topFinishY = height - cardH - 12 * s;
 
     if (useGlassBox) {
-      drawRoundedRect(ctx, baseX, topFinishY, baseW, cardH, 18 * s);
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.56)';
+      drawRoundedRect(ctx, baseX, topFinishY, baseW, cardH, 16 * s);
+      ctx.fillStyle = 'rgba(2, 6, 23, 0.58)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
-      ctx.lineWidth = Math.max(1, 1.4 * s);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.lineWidth = Math.max(1, 0.8 * s);
       ctx.stroke();
     }
 
-    ctx.shadowColor = useGlassBox ? 'rgba(0, 0, 0, 0.78)' : txtPalette.shadow;
-    ctx.shadowBlur = 7 * s;
+    ctx.shadowColor = useGlassBox ? 'rgba(0, 0, 0, 0.75)' : txtPalette.shadow;
+    ctx.shadowBlur = 3.5 * s;
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = useGlassBox ? 'rgba(2, 6, 23, 0.65)' : txtPalette.stroke;
-    ctx.lineWidth = 2.6 * s;
+    ctx.strokeStyle = useGlassBox ? 'rgba(2, 6, 23, 0.55)' : txtPalette.stroke;
+    ctx.lineWidth = 1.4 * s;
 
     const centerX = baseX + baseW * 0.5;
     ctx.textAlign = 'center';
-    ctx.font = `800 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
-    ctx.strokeText('ACTIVITY COMPLETED', centerX, topFinishY + 26 * s);
+    ctx.font = `800 ${Math.round(8 * s)}px JetBrains Mono, monospace`;
+    ctx.strokeText('ACTIVITY COMPLETED', centerX, topFinishY + 16 * s);
     ctx.fillStyle = accentColor;
-    ctx.fillText('ACTIVITY COMPLETED', centerX, topFinishY + 26 * s);
+    ctx.fillText('ACTIVITY COMPLETED', centerX, topFinishY + 16 * s);
 
     const titleLine = `${runnerNameClean} · ${track.title.slice(0, 22)}`;
-    ctx.font = `700 ${Math.round(18 * s)}px Outfit, sans-serif`;
-    ctx.strokeText(titleLine, centerX, topFinishY + 49 * s);
+    ctx.font = `700 ${Math.round(12 * s)}px Outfit, sans-serif`;
+    ctx.strokeText(titleLine, centerX, topFinishY + 31 * s);
     ctx.fillStyle = useGlassBox ? '#FFFFFF' : txtPalette.primary;
-    ctx.fillText(titleLine, centerX, topFinishY + 49 * s);
+    ctx.fillText(titleLine, centerX, topFinishY + 31 * s);
 
     const stravaMetrics = [
       { label: 'DISTANCE', value: `${track.totalDistanceKm.toFixed(2)} km` },
@@ -510,16 +511,16 @@ function paintBroadcastHudOverlay(params: {
     ];
     stravaMetrics.forEach((m, idx) => {
       const mx = baseX + colW * (idx + 0.5);
-      const my = topFinishY + 84 * s;
-      ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
+      const my = topFinishY + 52 * s;
+      ctx.font = `700 ${Math.round(7.5 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(m.label, mx, my);
       ctx.fillStyle = useGlassBox ? '#E2E8F0' : txtPalette.secondary;
       ctx.fillText(m.label, mx, my);
 
-      ctx.font = `800 ${Math.round(22 * s)}px JetBrains Mono, monospace`;
-      ctx.strokeText(m.value, mx, my + 26 * s);
+      ctx.font = `800 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(m.value, mx, my + 15 * s);
       ctx.fillStyle = useGlassBox ? '#FFFFFF' : txtPalette.primary;
-      ctx.fillText(m.value, mx, my + 26 * s);
+      ctx.fillText(m.value, mx, my + 15 * s);
     });
 
     const subMetrics = [
@@ -529,65 +530,65 @@ function paintBroadcastHudOverlay(params: {
     ];
     subMetrics.forEach((m, idx) => {
       const mx = baseX + colW * (idx + 0.5);
-      const my = topFinishY + 146 * s;
-      ctx.font = `600 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
+      const my = topFinishY + 90 * s;
+      ctx.font = `600 ${Math.round(7.5 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(m.label, mx, my);
       ctx.fillStyle = useGlassBox ? '#CBD5E1' : txtPalette.secondary;
       ctx.fillText(m.label, mx, my);
 
-      ctx.font = `700 ${Math.round(18 * s)}px JetBrains Mono, monospace`;
-      ctx.strokeText(m.value, mx, my + 22 * s);
+      ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(m.value, mx, my + 13 * s);
       ctx.fillStyle = useGlassBox ? '#FFFFFF' : txtPalette.primary;
-      ctx.fillText(m.value, mx, my + 22 * s);
+      ctx.fillText(m.value, mx, my + 13 * s);
     });
   } else {
-    const cardH = 172 * s;
-    const topLiveY = height - cardH - 24 * s;
+    const cardH = 122 * s;
+    const topLiveY = height - cardH - 12 * s;
 
     if (useGlassBox) {
-      drawRoundedRect(ctx, baseX, topLiveY, baseW, cardH, 18 * s);
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.54)';
+      drawRoundedRect(ctx, baseX, topLiveY, baseW, cardH, 16 * s);
+      ctx.fillStyle = 'rgba(2, 6, 23, 0.56)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.26)';
-      ctx.lineWidth = Math.max(1, 1.3 * s);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.lineWidth = Math.max(1, 0.8 * s);
       ctx.stroke();
     }
 
-    ctx.shadowColor = useGlassBox ? 'rgba(0, 0, 0, 0.78)' : txtPalette.shadow;
-    ctx.shadowBlur = 7 * s;
+    ctx.shadowColor = useGlassBox ? 'rgba(0, 0, 0, 0.75)' : txtPalette.shadow;
+    ctx.shadowBlur = 3.5 * s;
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = useGlassBox ? 'rgba(2, 6, 23, 0.65)' : txtPalette.stroke;
-    ctx.lineWidth = 2.6 * s;
+    ctx.strokeStyle = useGlassBox ? 'rgba(2, 6, 23, 0.55)' : txtPalette.stroke;
+    ctx.lineWidth = 1.4 * s;
 
-    const innerPad = 18 * s;
+    const innerPad = 12 * s;
     const distStr = telemetry.distanceKm.toFixed(2);
     ctx.textAlign = 'left';
-    ctx.font = `800 ${Math.round(26 * s)}px JetBrains Mono, monospace`;
-    ctx.strokeText(distStr, baseX + innerPad, topLiveY + 34 * s);
+    ctx.font = `800 ${Math.round(16 * s)}px JetBrains Mono, monospace`;
+    ctx.strokeText(distStr, baseX + innerPad, topLiveY + 21 * s);
     ctx.fillStyle = useGlassBox ? '#FFFFFF' : txtPalette.primary;
-    ctx.fillText(distStr, baseX + innerPad, topLiveY + 34 * s);
+    ctx.fillText(distStr, baseX + innerPad, topLiveY + 21 * s);
     const distW = ctx.measureText(distStr).width;
 
     const totalStr = ` / ${track.totalDistanceKm.toFixed(2)} KM`;
-    ctx.font = `700 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
-    ctx.strokeText(totalStr, baseX + innerPad + distW, topLiveY + 33 * s);
+    ctx.font = `700 ${Math.round(8.5 * s)}px JetBrains Mono, monospace`;
+    ctx.strokeText(totalStr, baseX + innerPad + distW, topLiveY + 20 * s);
     ctx.fillStyle = accentColor;
-    ctx.fillText(totalStr, baseX + innerPad + distW, topLiveY + 33 * s);
+    ctx.fillText(totalStr, baseX + innerPad + distW, topLiveY + 20 * s);
 
     ctx.textAlign = 'right';
     const timeStr = formatDuration(telemetry.elapsedSec);
-    ctx.font = `700 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
-    ctx.strokeText(timeStr, baseX + baseW - innerPad, topLiveY + 33 * s);
+    ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
+    ctx.strokeText(timeStr, baseX + baseW - innerPad, topLiveY + 20 * s);
     ctx.fillStyle = useGlassBox ? '#FFFFFF' : txtPalette.primary;
-    ctx.fillText(timeStr, baseX + baseW - innerPad, topLiveY + 33 * s);
+    ctx.fillText(timeStr, baseX + baseW - innerPad, topLiveY + 20 * s);
 
-    const barY = topLiveY + 46 * s;
+    const barY = topLiveY + 29 * s;
     const barW = baseW - innerPad * 2;
-    drawRoundedRect(ctx, baseX + innerPad, barY, barW, 5 * s, 2.5 * s);
+    drawRoundedRect(ctx, baseX + innerPad, barY, barW, 3.5 * s, 1.8 * s);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
     ctx.fill();
 
-    drawRoundedRect(ctx, baseX + innerPad, barY, Math.max(12 * s, barW * progress), 5 * s, 2.5 * s);
+    drawRoundedRect(ctx, baseX + innerPad, barY, Math.max(8 * s, barW * progress), 3.5 * s, 1.8 * s);
     ctx.fillStyle = accentColor;
     ctx.fill();
 
@@ -605,17 +606,17 @@ function paintBroadcastHudOverlay(params: {
       const col = idx % 3;
       const row = Math.floor(idx / 3);
       const sx = baseX + colW * (col + 0.5);
-      const sy = topLiveY + (70 + row * 47) * s;
+      const sy = topLiveY + (48 + row * 33) * s;
 
-      ctx.font = `600 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
+      ctx.font = `600 ${Math.round(7.5 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(st.label, sx, sy);
-      ctx.fillStyle = useGlassBox ? '#E2E8F0' : txtPalette.secondary;
+      ctx.fillStyle = useGlassBox ? '#CBD5E1' : txtPalette.secondary;
       ctx.fillText(st.label, sx, sy);
 
-      ctx.font = `700 ${Math.round(18 * s)}px JetBrains Mono, monospace`;
-      ctx.strokeText(st.value, sx, sy + 21 * s);
+      ctx.font = `700 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(st.value, sx, sy + 13.5 * s);
       ctx.fillStyle = useGlassBox ? '#FFFFFF' : txtPalette.primary;
-      ctx.fillText(st.value, sx, sy + 21 * s);
+      ctx.fillText(st.value, sx, sy + 13.5 * s);
     });
   }
   ctx.restore();
