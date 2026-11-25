@@ -339,7 +339,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     const rawPitchDeg = THREE.MathUtils.clamp(
       (Math.atan2(horizForward, Math.max(0.001, -fwd.y)) * 180) / Math.PI,
       0,
-      78,
+      58,
     );
     const pitchDeg = buildings3d ? rawPitchDeg : 0;
     const bearingDeg = (Math.atan2(fwd.x, -fwd.z) * 180) / Math.PI;
