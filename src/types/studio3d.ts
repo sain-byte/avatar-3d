@@ -75,6 +75,7 @@ export interface MapConfig {
   routeStyle?: RouteVisualStyle3D;
   routeSnapMode?: RouteSnapMode3D;
   overlayColor?: string;
+  overlayTextColor?: string;
 }
 
 export type DurationPresetSec = 15 | 30 | 45 | 60 | 'custom';
@@ -170,6 +171,7 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   routeStyle: 'google-maps',
   routeSnapMode: 'raw',
   overlayColor: '#F97316',
+  overlayTextColor: 'auto',
 };
 
 export const DEFAULT_EXPORT_CONFIG: ExportConfig = {

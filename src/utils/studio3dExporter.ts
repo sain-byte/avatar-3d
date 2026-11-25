@@ -270,6 +270,29 @@ export function computeMiniMapGeometry(
   };
 }
 
+function resolveOverlayPrimaryText(mode: string | undefined, mapStyle: 'light' | 'dark' | undefined): {
+  primary: string;
+  secondary: string;
+  stroke: string;
+  shadow: string;
+} {
+  const effective = !mode || mode === 'auto' ? (mapStyle === 'dark' ? '#FFFFFF' : '#0F172A') : mode;
+  const isDarkText = effective.toLowerCase() === '#0f172a' || effective.toLowerCase() === '#000000' || effective.toLowerCase() === '#1e293b';
+  return isDarkText
+    ? {
+        primary: effective,
+        secondary: 'rgba(15, 23, 42, 0.85)',
+        stroke: 'rgba(255, 255, 255, 0.85)',
+        shadow: 'rgba(255, 255, 255, 0.75)',
+      }
+    : {
+        primary: effective,
+        secondary: 'rgba(248, 250, 252, 0.92)',
+        stroke: 'rgba(2, 6, 23, 0.78)',
+        shadow: 'rgba(0, 0, 0, 0.92)',
+      };
+}
+
 function paintBroadcastHudOverlay(params: {
   ctx: CanvasRenderingContext2D;
   width: number;
@@ -277,12 +300,15 @@ function paintBroadcastHudOverlay(params: {
   track: Studio3DTrack;
   runner: RunnerConfig;
   accentColor: string;
+  textColorMode?: string;
+  mapStyle?: 'light' | 'dark';
   telemetry: Studio3DFrameTelemetry;
   allSplits: KmSplitItem[];
   progress: number;
   includeFinishPose: boolean;
 }) {
-  const { ctx, width, height, track, runner, accentColor, telemetry, allSplits, progress, includeFinishPose } = params;
+  const { ctx, width, height, track, runner, accentColor, textColorMode, mapStyle, telemetry, allSplits, progress, includeFinishPose } = params;
+  const txtPalette = resolveOverlayPrimaryText(textColorMode, mapStyle);
   const s = width / 720;
   const finishThreshold = includeFinishPose ? 0.88 : 1.0;
   const routeProgress = Math.min(1, Math.max(0, progress / finishThreshold));
@@ -298,11 +324,11 @@ function paintBroadcastHudOverlay(params: {
 
   // Header Kiri Atas tanpa blok hitam (mengandalkan stroke + drop shadow tajam)
   ctx.save();
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
+  ctx.shadowColor = txtPalette.shadow;
   ctx.shadowBlur = 8 * s;
   ctx.shadowOffsetY = 1.5 * s;
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = 'rgba(2, 6, 23, 0.72)';
+  ctx.strokeStyle = txtPalette.stroke;
   ctx.lineWidth = 3 * s;
 
   ctx.textAlign = 'left';
@@ -313,12 +339,12 @@ function paintBroadcastHudOverlay(params: {
 
   ctx.font = `700 ${Math.round(20 * s)}px Outfit, sans-serif`;
   ctx.strokeText(track.title.slice(0, 24), padX, topY + 46 * s);
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = txtPalette.primary;
   ctx.fillText(track.title.slice(0, 24), padX, topY + 46 * s);
 
   ctx.font = `600 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
   ctx.strokeText(metaSubline, padX, topY + 72 * s);
-  ctx.fillStyle = '#F8FAFC';
+  ctx.fillStyle = txtPalette.secondary;
   ctx.fillText(metaSubline, padX, topY + 72 * s);
   ctx.restore();
 
@@ -332,7 +358,7 @@ function paintBroadcastHudOverlay(params: {
   ctx.lineWidth = Math.max(1, 1.3 * s);
   ctx.stroke();
 
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = txtPalette.primary;
   ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
   ctx.fillText('GPS', mmX + 9 * s, mmY + 15 * s);
 
@@ -357,7 +383,7 @@ function paintBroadcastHudOverlay(params: {
 
     ctx.beginPath();
     ctx.arc(mmX + mmGeom.runnerPt.x, mmY + mmGeom.runnerPt.y, 4.2 * s, 0, Math.PI * 2);
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = txtPalette.primary;
     ctx.fill();
     ctx.strokeStyle = accentColor;
     ctx.lineWidth = Math.max(1.2, 1.8 * s);
@@ -376,11 +402,11 @@ function paintBroadcastHudOverlay(params: {
     const rowH = 25 * s;
 
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
+    ctx.shadowColor = txtPalette.shadow;
     ctx.shadowBlur = 7 * s;
     ctx.shadowOffsetY = 1.5 * s;
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(2, 6, 23, 0.72)';
+    ctx.strokeStyle = txtPalette.stroke;
     ctx.lineWidth = 2.6 * s;
 
     visibleSplits.forEach((sp, idx) => {
@@ -395,7 +421,7 @@ function paintBroadcastHudOverlay(params: {
       const valText = `${formatPace(sp.avgPaceSecPerKm)}/km · ${sp.avgHr} bpm`;
       ctx.font = `700 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(valText, padX + 66 * s, sy + 16 * s);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = txtPalette.primary;
       ctx.fillText(valText, padX + 66 * s, sy + 16 * s);
     });
     ctx.restore();
@@ -405,11 +431,11 @@ function paintBroadcastHudOverlay(params: {
 
   // Overlay Bawah Transparan Murni (Tanpa block hitam)
   ctx.save();
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.94)';
+  ctx.shadowColor = txtPalette.shadow;
   ctx.shadowBlur = 9 * s;
   ctx.shadowOffsetY = 2 * s;
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = 'rgba(2, 6, 23, 0.75)';
+  ctx.strokeStyle = txtPalette.stroke;
   ctx.lineWidth = 3 * s;
 
   const baseX = padX;
@@ -432,7 +458,7 @@ function paintBroadcastHudOverlay(params: {
     const titleLine = `${runnerNameClean} · ${track.title.slice(0, 20)}`;
     ctx.font = `700 ${Math.round(19 * s)}px Outfit, sans-serif`;
     ctx.strokeText(titleLine, baseX + 14 * s, topFinishY + 35 * s);
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = txtPalette.primary;
     ctx.fillText(titleLine, baseX + 14 * s, topFinishY + 35 * s);
 
     const stravaMetrics = [
@@ -445,12 +471,12 @@ function paintBroadcastHudOverlay(params: {
       const my = topFinishY + 68 * s;
       ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(m.label, mx, my);
-      ctx.fillStyle = '#F1F5F9';
+      ctx.fillStyle = txtPalette.secondary;
       ctx.fillText(m.label, mx, my);
 
       ctx.font = `800 ${Math.round(23 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(m.value, mx, my + 26 * s);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = txtPalette.primary;
       ctx.fillText(m.value, mx, my + 26 * s);
     });
 
@@ -464,12 +490,12 @@ function paintBroadcastHudOverlay(params: {
       const my = topFinishY + 128 * s;
       ctx.font = `600 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(m.label, mx, my);
-      ctx.fillStyle = '#E2E8F0';
+      ctx.fillStyle = txtPalette.secondary;
       ctx.fillText(m.label, mx, my);
 
       ctx.font = `700 ${Math.round(18 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(m.value, mx, my + 22 * s);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = txtPalette.primary;
       ctx.fillText(m.value, mx, my + 22 * s);
     });
   } else {
@@ -479,7 +505,7 @@ function paintBroadcastHudOverlay(params: {
     ctx.textAlign = 'left';
     ctx.font = `800 ${Math.round(28 * s)}px JetBrains Mono, monospace`;
     ctx.strokeText(distStr, baseX, topLiveY + 26 * s);
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = txtPalette.primary;
     ctx.fillText(distStr, baseX, topLiveY + 26 * s);
     const distW = ctx.measureText(distStr).width;
 
@@ -493,7 +519,7 @@ function paintBroadcastHudOverlay(params: {
     const timeStr = formatDuration(telemetry.elapsedSec);
     ctx.font = `700 ${Math.round(15 * s)}px JetBrains Mono, monospace`;
     ctx.strokeText(timeStr, baseX + baseW, topLiveY + 25 * s);
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = txtPalette.primary;
     ctx.fillText(timeStr, baseX + baseW, topLiveY + 25 * s);
     ctx.textAlign = 'left';
 
@@ -523,12 +549,12 @@ function paintBroadcastHudOverlay(params: {
 
       ctx.font = `600 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(st.label, sx, sy);
-      ctx.fillStyle = '#F1F5F9';
+      ctx.fillStyle = txtPalette.secondary;
       ctx.fillText(st.label, sx, sy);
 
       ctx.font = `700 ${Math.round(19 * s)}px JetBrains Mono, monospace`;
       ctx.strokeText(st.value, sx, sy + 22 * s);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = txtPalette.primary;
       ctx.fillText(st.value, sx, sy + 22 * s);
     });
   }
@@ -566,6 +592,8 @@ export interface ExportVideoCallbacks {
   runner: RunnerConfig;
   exportConfig: ExportConfig;
   overlayColor?: string;
+  overlayTextColor?: string;
+  mapStyle?: 'light' | 'dark';
   onPercent: (pct: number) => void;
   abortSignal: AbortSignal;
 }
@@ -579,6 +607,8 @@ export async function recordStudio3DVideo({
   runner,
   exportConfig,
   overlayColor = '#F97316',
+  overlayTextColor = 'auto',
+  mapStyle = 'light',
   onPercent,
   abortSignal,
 }: ExportVideoCallbacks): Promise<{ blob: Blob; filename: string; extension: 'mp4' | 'webm' }> {
@@ -691,6 +721,8 @@ export async function recordStudio3DVideo({
         track,
         runner,
         accentColor: overlayColor,
+        textColorMode: overlayTextColor,
+        mapStyle,
         telemetry,
         allSplits,
         progress: p,

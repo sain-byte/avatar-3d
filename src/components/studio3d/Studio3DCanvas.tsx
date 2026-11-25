@@ -540,7 +540,12 @@ export const Studio3DCanvas: React.FC<Studio3DCanvasProps> = (props) => {
           </button>
         </div>
       ) : (
-        <div className="relative w-full h-full overflow-hidden">
+        <div
+          className="relative w-full h-full overflow-hidden transition-colors duration-300"
+          style={{
+            backgroundColor: props.mapConfig.mapStyle === 'dark' ? '#0B1120' : '#F3EFE6',
+          }}
+        >
           <div
             ref={setMapContainer}
             id="map"
