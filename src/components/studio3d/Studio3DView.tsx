@@ -467,7 +467,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
       }
     } else {
       setActiveSavedAvatarId(null);
-      setAvatarStorageNotice(`Model aktif: ${file.name}. Klik Simpan Avatar agar tersimpan permanen.`);
+      setAvatarStorageNotice(`Model aktif: ${file.name}. Klik Simpan agar tersimpan permanen.`);
     }
   };
 

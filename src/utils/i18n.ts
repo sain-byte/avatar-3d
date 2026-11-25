@@ -3,6 +3,7 @@ export type Language = 'en' | 'id';
 export interface AppTranslations {
   nav: {
     studio3d: string;
+    languageLabel: string;
   };
   toolbar: {
     lightMode: string;
@@ -22,6 +23,7 @@ export const TRANSLATIONS: Record<Language, AppTranslations> = {
   en: {
     nav: {
       studio3d: '3D Animation Studio',
+      languageLabel: 'Language',
     },
     toolbar: {
       lightMode: 'Light mode',
@@ -41,6 +43,7 @@ export const TRANSLATIONS: Record<Language, AppTranslations> = {
   id: {
     nav: {
       studio3d: 'Studio Animasi 3D',
+      languageLabel: 'Bahasa',
     },
     toolbar: {
       lightMode: 'Mode Terang',
