@@ -242,6 +242,8 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
   });
 
   const isFemale = config.gender === 'female';
+  const isTrail = config.characterStyle === 'trail-pro';
+  const showTrailVest = config.accessory === 'trail-vest' || (isTrail && config.accessory === 'none');
   const skinColor = '#E8B796';
   const hairColor = '#1E293B';
   const shoulderHalfW = isFemale ? 0.185 : 0.215;
