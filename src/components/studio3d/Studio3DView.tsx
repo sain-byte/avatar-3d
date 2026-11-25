@@ -1536,7 +1536,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
             />
           </div>
         </div>
-      </div>
+      </section>
 
       <Studio3DPanelTabs
         activeTab={activeTab}
