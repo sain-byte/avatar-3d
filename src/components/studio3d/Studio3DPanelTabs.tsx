@@ -279,6 +279,65 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                   </button>
                 </div>
 
+                <div className="space-y-1.5 pt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    Preset Avatar Gratis (1-Klik)
+                  </p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      {
+                        label: "Sain (Default)",
+                        url: "/models/ava-sain.glb",
+                        flip180: false,
+                        animMode: "auto" as const,
+                      },
+                      {
+                        label: "Runner Taktis",
+                        url: "https://threejs.org/examples/models/gltf/Soldier.glb",
+                        flip180: true,
+                        animMode: "clip" as const,
+                      },
+                      {
+                        label: "Manekin Sporty",
+                        url: "https://threejs.org/examples/models/gltf/Xbot.glb",
+                        flip180: false,
+                        animMode: "clip" as const,
+                      },
+                      {
+                        label: "Robot Kartun",
+                        url: "https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb",
+                        flip180: false,
+                        animMode: "clip" as const,
+                      },
+                    ].map((preset) => {
+                      const active = runner.customModelUrl === preset.url;
+                      return (
+                        <button
+                          key={preset.url}
+                          type="button"
+                          onClick={() =>
+                            onChangeRunner((prev) => ({
+                              ...prev,
+                              characterStyle: "custom-glb",
+                              customModelUrl: preset.url,
+                              customModelName: preset.label,
+                              customModelFlip180: preset.flip180,
+                              customModelAnimMode: preset.animMode,
+                            }))
+                          }
+                          className={`px-2 py-1.5 rounded-lg border text-[11px] font-medium text-left truncate transition cursor-pointer ${
+                            active
+                              ? "border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold"
+                              : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-400"
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {runner.customModelUrl && (
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2.5 space-y-2 text-[11px]">
                     <div className="flex items-center justify-between gap-2">
