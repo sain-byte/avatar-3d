@@ -642,43 +642,22 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
     const runAction = runActionRef.current;
     const idleAction = idleActionRef.current;
     const engageBonesFinish =
-      finishBlend > 0.005 && rigMetaRef.current.hasLimbRig && (rigMode === 'bones' || !idleAction);
+      finishBlend > 0.005 && rigMode === 'bones' && rigMetaRef.current.hasLimbRig;
 
     if (mixer && rigMode === 'clip') {
-      if (finishBlend > 0.005) {
-        if (idleAction && runAction) {
-          runAction.enabled = true;
-          runAction.setEffectiveWeight(1 - finishBlend);
-          idleAction.enabled = true;
-          idleAction.setEffectiveWeight(finishBlend);
-          idleAction.play();
-          mixer.update(dt);
-        } else if (engageBonesFinish && runAction) {
-          // Perlambat siklus lari secara mulus dan blend langsung tanpa pernah melewati T-Pose
-          const clipWeight = Math.max(0, 1 - finishBlend);
-          runAction.setEffectiveWeight(clipWeight);
-          if (clipWeight > 0.005) {
-            mixer.update(dt * Math.max(0.15, activeGaitScale));
-          }
-        } else if (runAction) {
-          // Untuk model GLB non-humanoid (static/custom rig), perlambat siklus lari secara halus lalu masuk pose selebrasi
-          const slowDown = Math.max(0.08, 1 - finishBlend * 0.92);
-          runAction.setEffectiveWeight(slowDown);
-          mixer.update(dt * slowDown);
-        }
+      if (runAction) {
+        runAction.enabled = true;
+        runAction.setEffectiveWeight(1);
+        if (idleAction) idleAction.setEffectiveWeight(0);
+      }
+      if (isPlaying) {
+        const baseSpeed = Math.max(0.35, (cadenceSpm / 165) * gait.freqScale);
+        // Slow-motion sinematik (0.24x) saat fase finish tanpa pernah melepas klip (0% risiko T-Pose)
+        const slowMoFactor = 1 - finishBlend * 0.76;
+        mixer.update(dt * baseSpeed * slowMoFactor);
       } else {
-        if (runAction) {
-          runAction.enabled = true;
-          runAction.setEffectiveWeight(1);
-          if (idleAction) idleAction.setEffectiveWeight(0);
-        }
-        if (isPlaying) {
-          const speedScale = Math.max(0.35, (cadenceSpm / 165) * gait.freqScale * preFinishGaitScale);
-          mixer.update(dt * speedScale);
-        } else {
-          const clipDur = Math.max(0.25, runAction?.getClip().duration ?? 0.85);
-          mixer.setTime((timelineProgress * 24 * gait.freqScale) % clipDur);
-        }
+        const clipDur = Math.max(0.25, runAction?.getClip().duration ?? 0.85);
+        mixer.setTime((timelineProgress * 24 * gait.freqScale) % clipDur);
       }
     }
 
@@ -716,7 +695,7 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
           ? 1 - Math.exp(-7.5 * dt)
           : 1;
 
-      if (blendedFinishPose) {
+      if (blendedFinishPose && rigMode === 'bones') {
         applyLimbBonePose(
           rig.hips,
           blendedFinishPose.hipsPitch,

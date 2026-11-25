@@ -379,16 +379,21 @@ const SceneContent: React.FC<
       camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 0.9, runnerPos.z);
     } else if (effectiveMode === 'finish-pose') {
       const finishZoom = THREE.MathUtils.clamp(zoom, 0.75, 1.55);
-      const orbitOffset = Math.sin(state.clock.elapsedTime * 0.55) * 0.14;
-      const frontAngle = smoothYawRef.current + 0.22 + orbitOffset;
-      const heroDist = runnerScale * 5.2 * finishZoom;
-      const heroHeight = runnerScale * 1.32 * finishZoom;
+      // Orbit 360 derajat penuh mengelilingi pelari slow-motion selama fase finish
+      const finishSpan = Math.max(0.04, 1 - finishThreshold);
+      const finishRatio = THREE.MathUtils.clamp((timelineProgress - finishThreshold) / finishSpan, 0, 1);
+      const orbitAngle =
+        mapConfig.cameraMode === 'finish-pose'
+          ? smoothYawRef.current + state.clock.elapsedTime * 0.65
+          : smoothYawRef.current + Math.PI * 0.75 + finishRatio * Math.PI * 2;
+      const heroDist = runnerScale * 4.8 * finishZoom;
+      const heroHeight = runnerScale * 1.48 * finishZoom;
       camTargetPosRef.current.set(
-        runnerPos.x + Math.sin(frontAngle) * heroDist,
+        runnerPos.x + Math.sin(orbitAngle) * heroDist,
         runnerPos.y + heroHeight,
-        runnerPos.z + Math.cos(frontAngle) * heroDist,
+        runnerPos.z + Math.cos(orbitAngle) * heroDist,
       );
-      camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 1.15, runnerPos.z);
+      camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 1.05, runnerPos.z);
     } else {
       const trailAngle = smoothYawRef.current + Math.PI * 0.88;
       const camX = runnerPos.x + Math.sin(trailAngle) * droneBackDist;

@@ -148,7 +148,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
       includeFinishPose,
       isManualFinishCamera,
     );
-    const activeGaitScale = preFinishScale * (1 - finishBlend * 0.85);
+    const activeGaitScale = 1 - finishBlend * 0.76;
 
     if (isPlaying) {
       const strideFreqHz = Math.max(0.35, (cadenceSpm / 60) * gait.freqScale * activeGaitScale);
@@ -167,7 +167,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
       gaitPoseRef.current,
     );
 
-    if (finishBlend > 0.002) {
+    if (false && finishBlend > 0.002) {
       const rawFinish = evaluateFinishPoseKinematics(poseStyle, t);
       const blended = blendGaitToFinishPoseKinematics(pose, rawFinish, finishBlend, 0.4);
       const isExhausted = poseStyle === 'exhausted-bow' || poseStyle === 'hands-on-hips';
