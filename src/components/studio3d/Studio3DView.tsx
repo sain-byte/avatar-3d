@@ -146,7 +146,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
   const audioEngineRef = useRef<Studio3DAudioEngine | null>(null);
   const exportAbortRef = useRef<AbortController | null>(null);
   const activeModelBlobRef = useRef<Blob | null>(null);
-  const snappedTrackCacheRef = useRef>(new Map());
+  const snappedTrackCacheRef = useRef<Record<string, Studio3DTrack>>({});
   const hasAutoPickedGpsRef = useRef(Boolean(initialPicked));
   const latestBlobUrlsRef = useRef<{ audio: string | null; model: string | null }>({
     audio: null,
@@ -281,7 +281,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
       setRouteSnapStatus('idle');
       return;
     }
-    const cached = snappedTrackCacheRef.current.get(track.id);
+    const cached = snappedTrackCacheRef.current[track.id];
     if (cached) {
       setSnappedTrack(cached);
       setRouteSnapStatus('matched');
@@ -293,7 +293,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
     void fetchRoadSnappedTrack(track, controller.signal).then((res) => {
       if (controller.signal.aborted) return;
       if (res.matched) {
-        snappedTrackCacheRef.current.set(track.id, res.track);
+        snappedTrackCacheRef.current[track.id] = res.track;
         setSnappedTrack(res.track);
         setRouteSnapStatus('matched');
       } else {
