@@ -601,30 +601,32 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                   Tema Peta
                 </span>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    data-testid="studio3d-mapstyle-light"
-                    onClick={() => onChangeMapConfig((prev) => ({ ...prev, mapStyle: 'clean' }))}
-                    className={`h-9 px-3 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
-                      mapConfig.mapStyle === 'clean'
-                        ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
-                        : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    Light
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="studio3d-mapstyle-dark"
-                    onClick={() => onChangeMapConfig((prev) => ({ ...prev, mapStyle: 'dark' }))}
-                    className={`h-9 px-3 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
-                      mapConfig.mapStyle === 'dark'
-                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
-                        : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    Night
-                  </button>
+                  {(
+                    [
+                      { id: 'clean', label: 'Clean Pastel', desc: 'Minimalis bersih' },
+                      { id: 'street', label: 'Street 3D', desc: 'Jalan & gedung kota' },
+                      { id: 'dark', label: 'Night Mode', desc: 'Gelap elegan' },
+                      { id: 'satellite', label: 'Satelit', desc: 'Citra udara asli' },
+                    ] as const
+                  ).map((st) => {
+                    const active = mapConfig.mapStyle === st.id;
+                    return (
+                      <button
+                        key={st.id}
+                        type="button"
+                        data-testid={`studio3d-mapstyle-${st.id}`}
+                        onClick={() => onChangeMapConfig((prev) => ({ ...prev, mapStyle: st.id }))}
+                        className={`p-2 rounded-lg border text-left transition-colors cursor-pointer ${
+                          active
+                            ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <span className="block text-xs font-bold leading-tight">{st.label}</span>
+                        <span className="block text-[10px] opacity-75 mt-0.5">{st.desc}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -657,47 +659,6 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                   >
                     3D OFF
                   </button>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Gaya Rute
-                </span>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {(
-                    [
-                      { id: 'google-maps', label: 'Google Maps', desc: 'Biru + panah arah' },
-                      { id: 'google-pace', label: 'Pace / Traffic', desc: 'Hijau–kuning–merah' },
-                      { id: 'sport-jersey', label: 'Warna Jersey', desc: 'Sesuai jersey + arah' },
-                      { id: 'minimal-clean', label: 'Minimal', desc: 'Garis polos bersih' },
-                      { id: 'sportbyte-lime', label: 'Sport Byte Lime', desc: 'Lime #a6f04b + casing gelap' },
-                    ] as Array<{ id: RouteVisualStyle3D; label: string; desc: string }>
-                  ).map((rs) => {
-                    const active = (mapConfig.routeStyle ?? 'google-maps') === rs.id;
-                    return (
-                      <button
-                        key={rs.id}
-                        type="button"
-                        data-testid={`studio3d-routestyle-${rs.id}`}
-                        onClick={() =>
-                          onChangeMapConfig((prev) => ({ ...prev, routeStyle: rs.id }))
-                        }
-                        className={`px-2.5 py-1.5 rounded-lg border text-left transition-colors cursor-pointer ${
-                          rs.id === 'sportbyte-lime' ? 'col-span-2' : ''
-                        } ${
-                          active
-                            ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300'
-                            : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        <span className="block text-[11px] font-semibold leading-tight">
-                          {rs.label}
-                        </span>
-                        <span className="block text-[9px] opacity-75">{rs.desc}</span>
-                      </button>
-                    );
-                  })}
                 </div>
               </div>
 
