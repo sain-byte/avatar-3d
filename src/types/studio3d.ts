@@ -4,7 +4,7 @@ export type RunnerAccessory = 'none' | 'cap' | 'headband' | 'visor' | 'trail-ves
 export type CharacterStyle3D = 'realistic' | 'trail-pro' | 'custom-glb';
 export type CharacterSize3D = 'small' | 'medium' | 'large';
 export type GaitMode3D = 'auto' | 'walk' | 'jog' | 'run' | 'sprint';
-export type FinishPoseStyle3D = 'celebrate-jump' | 'exhausted-bow' | 'victory-raise';
+export type FinishPoseStyle3D = 'celebrate-jump' | 'exhausted-bow' | 'victory-raise' | 'hands-on-hips' | 'check-watch' | 'casual-wave';
 export type CustomModelAnimMode = 'auto' | 'bones' | 'clip';
 
 export interface RunnerConfig {

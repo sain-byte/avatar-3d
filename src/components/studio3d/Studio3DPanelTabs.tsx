@@ -226,9 +226,12 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                 <div className="grid grid-cols-3 gap-1.5 pt-1">
                   {(
                     [
-                      { id: 'celebrate-jump', label: 'Lompat' },
+                      { id: 'hands-on-hips', label: 'Tangan Pinggang' },
+                      { id: 'check-watch', label: 'Cek Jam' },
+                      { id: 'casual-wave', label: 'Sapa Santai' },
                       { id: 'victory-raise', label: 'Angkat Tangan' },
                       { id: 'exhausted-bow', label: 'Tunduk Lelah' },
+                      { id: 'celebrate-jump', label: 'Lompat' },
                     ] as Array<{ id: FinishPoseStyle3D; label: string }>
                   ).map((fp) => (
                     <button

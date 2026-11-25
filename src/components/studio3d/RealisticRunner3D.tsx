@@ -164,7 +164,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
     if (finishBlend > 0.002) {
       const rawFinish = evaluateFinishPoseKinematics(poseStyle, t);
       const blended = blendGaitToFinishPoseKinematics(pose, rawFinish, finishBlend, 0.4);
-      const isExhausted = poseStyle === 'exhausted-bow';
+      const isExhausted = poseStyle === 'exhausted-bow' || poseStyle === 'hands-on-hips';
 
       bodyBounceRef.current.position.y = blended.bodyOffsetY;
       bodyBounceRef.current.rotation.z = blended.bodyRollZ;
