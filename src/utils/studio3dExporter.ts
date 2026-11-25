@@ -89,8 +89,8 @@ export function getCompletedKmSplits(
   const completed = allSplits.filter((sp) =>
     isFinishPhase ? true : currentDistanceKm >= sp.endKm - 0.005,
   );
-  // Tampilkan 3 split terbaru secara rolling agar layar tetap lega
-  return completed.slice(-3);
+  // Permanen menempel (tampilkan hingga 6 split terbaru secara rapi)
+  return completed.slice(-6);
 }
 
 export function getExportDurationSec(config: ExportConfig): number {
@@ -286,57 +286,64 @@ function paintBroadcastHudOverlay(params: {
   const finishThreshold = includeFinishPose ? 0.88 : 1.0;
   const routeProgress = Math.min(1, Math.max(0, progress / finishThreshold));
 
-  const topGrad = ctx.createLinearGradient(0, 0, 0, 185 * s);
-  topGrad.addColorStop(0, 'rgba(2, 6, 23, 0.84)');
-  topGrad.addColorStop(0.65, 'rgba(2, 6, 23, 0.38)');
+  const topGrad = ctx.createLinearGradient(0, 0, 0, 175 * s);
+  topGrad.addColorStop(0, 'rgba(2, 6, 23, 0.78)');
+  topGrad.addColorStop(0.65, 'rgba(2, 6, 23, 0.30)');
   topGrad.addColorStop(1, 'rgba(2, 6, 23, 0)');
   ctx.fillStyle = topGrad;
-  ctx.fillRect(0, 0, width, 185 * s);
+  ctx.fillRect(0, 0, width, 175 * s);
 
-  const botGrad = ctx.createLinearGradient(0, height - 300 * s, 0, height);
+  const botGrad = ctx.createLinearGradient(0, height - 310 * s, 0, height);
   botGrad.addColorStop(0, 'rgba(2, 6, 23, 0)');
-  botGrad.addColorStop(0.35, 'rgba(2, 6, 23, 0.52)');
-  botGrad.addColorStop(1, 'rgba(2, 6, 23, 0.90)');
+  botGrad.addColorStop(0.45, 'rgba(2, 6, 23, 0.45)');
+  botGrad.addColorStop(1, 'rgba(2, 6, 23, 0.82)');
   ctx.fillStyle = botGrad;
-  ctx.fillRect(0, height - 300 * s, width, 300 * s);
+  ctx.fillRect(0, height - 310 * s, width, 310 * s);
 
   const padX = 32 * s;
-  const runnerLabel = (runner.runnerName || 'Pelari').trim().toUpperCase().slice(0, 24);
+  const topY = 28 * s;
+  const mmSize = 88 * s;
+  const runnerNameClean = (runner.runnerName || 'Pelari').trim().slice(0, 24);
+  const locationClean = (track.location || '').trim();
+  const metaSubline = locationClean
+    ? `${track.date} · ${locationClean.slice(0, 24)}`
+    : track.date;
 
-  // Header Kiri Atas (Compact)
+  // Header Kiri Atas: tinggi sejajar presisi dengan kotak GPS (88 * s)
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+  ctx.shadowBlur = 6 * s;
+  ctx.shadowOffsetY = 1.5 * s;
+
   ctx.textAlign = 'left';
-  ctx.fillStyle = 'rgba(52, 211, 153, 0.96)';
-  ctx.font = `800 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
-  ctx.fillText(runnerLabel, padX, 40 * s);
+  ctx.fillStyle = '#FB923C';
+  ctx.font = `800 ${Math.round(13 * s)}px JetBrains Mono, monospace`;
+  ctx.fillText(runnerNameClean, padX, topY + 18 * s);
 
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = `700 ${Math.round(21 * s)}px Outfit, sans-serif`;
-  ctx.fillText(track.title.slice(0, 26), padX, 66 * s);
+  ctx.font = `700 ${Math.round(20 * s)}px Outfit, sans-serif`;
+  ctx.fillText(track.title.slice(0, 24), padX, topY + 46 * s);
 
-  ctx.fillStyle = 'rgba(226, 232, 240, 0.86)';
+  ctx.fillStyle = 'rgba(241, 245, 249, 0.92)';
   ctx.font = `600 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
-  ctx.fillText(
-    `${track.date} · ${track.location.slice(0, 26)}`,
-    padX,
-    88 * s,
-  );
+  ctx.fillText(metaSubline, padX, topY + 72 * s);
+  ctx.restore();
 
-  // Mini GPS Radar Kanan Atas (Compact)
-  const mmSize = 96 * s;
+  // Mini GPS Radar Kanan Atas (sejajar topY)
   const mmX = width - padX - mmSize;
-  const mmY = 28 * s;
+  const mmY = topY;
   drawRoundedRect(ctx, mmX, mmY, mmSize, mmSize, 14 * s);
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.52)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.24)';
   ctx.lineWidth = Math.max(1, 1.3 * s);
   ctx.stroke();
 
-  ctx.fillStyle = 'rgba(148, 163, 184, 0.92)';
+  ctx.fillStyle = 'rgba(226, 232, 240, 0.92)';
   ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
   ctx.fillText('GPS', mmX + 9 * s, mmY + 15 * s);
 
-  const mmGeom = computeMiniMapGeometry(track, routeProgress, mmSize, 15 * s);
+  const mmGeom = computeMiniMapGeometry(track, routeProgress, mmSize, 14 * s);
   if (mmGeom.polyline.length >= 2) {
     ctx.save();
     ctx.beginPath();
@@ -344,232 +351,155 @@ function paintBroadcastHudOverlay(params: {
     for (let i = 1; i < mmGeom.polyline.length; i += 1) {
       ctx.lineTo(mmX + mmGeom.polyline[i].x, mmY + mmGeom.polyline[i].y);
     }
-    ctx.strokeStyle = '#38BDF8';
+    ctx.strokeStyle = '#FB923C';
     ctx.lineWidth = Math.max(1.8, 2.8 * s);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(mmX + mmGeom.startPt.x, mmY + mmGeom.startPt.y, 3.5 * s, 0, Math.PI * 2);
-    ctx.fillStyle = '#10B981';
+    ctx.arc(mmX + mmGeom.startPt.x, mmY + mmGeom.startPt.y, 3.2 * s, 0, Math.PI * 2);
+    ctx.fillStyle = '#A3E635';
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(mmX + mmGeom.runnerPt.x, mmY + mmGeom.runnerPt.y, 4.8 * s, 0, Math.PI * 2);
+    ctx.arc(mmX + mmGeom.runnerPt.x, mmY + mmGeom.runnerPt.y, 4.5 * s, 0, Math.PI * 2);
     ctx.fillStyle = '#FFFFFF';
     ctx.fill();
-    ctx.strokeStyle = '#0284C7';
+    ctx.strokeStyle = '#EA580C';
     ctx.lineWidth = Math.max(1.2, 2 * s);
     ctx.stroke();
     ctx.restore();
   }
 
-  // Km Splits Ticker (Compact)
+  // Km Splits Permanen (Menempel & tidak hilang sampai akhir)
   const visibleSplits = getCompletedKmSplits(
     allSplits,
     telemetry.distanceKm,
     telemetry.isFinishPhase,
   );
-  if (visibleSplits.length > 0 && !telemetry.isFinishPhase) {
-    const pillW = 248 * s;
-    const pillH = 30 * s;
-    const startSplitY = 106 * s;
+  if (visibleSplits.length > 0) {
+    const startSplitY = topY + mmSize + 14 * s;
+    const rowH = 26 * s;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 5 * s;
+    ctx.shadowOffsetY = 1 * s;
 
     visibleSplits.forEach((sp, idx) => {
-      const sy = startSplitY + idx * (pillH + 5 * s);
-      const isNewest = idx === visibleSplits.length - 1;
-      ctx.save();
-      ctx.globalAlpha = isNewest ? 0.95 : idx === 0 && visibleSplits.length === 3 ? 0.65 : 0.82;
-      drawRoundedRect(ctx, padX, sy, pillW, pillH, 8 * s);
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
-      ctx.fill();
-      ctx.strokeStyle = isNewest ? 'rgba(52, 211, 153, 0.65)' : 'rgba(255, 255, 255, 0.14)';
-      ctx.lineWidth = Math.max(1, 1.1 * s);
-      ctx.stroke();
+      const sy = startSplitY + idx * rowH;
+      const isNewest = idx === visibleSplits.length - 1 && !telemetry.isFinishPhase;
 
-      ctx.fillStyle = isNewest ? '#34D399' : '#93C5FD';
+      ctx.fillStyle = isNewest ? '#A3E635' : '#FB923C';
       ctx.font = `800 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
-      ctx.fillText(`${sp.label} :`, padX + 10 * s, sy + 19 * s);
+      ctx.fillText(`KM ${sp.label}`, padX, sy + 16 * s);
 
       ctx.fillStyle = '#FFFFFF';
       ctx.font = `700 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
       ctx.fillText(
         `${formatPace(sp.avgPaceSecPerKm)}/km · ${sp.avgHr} bpm`,
-        padX + 56 * s,
-        sy + 19 * s,
+        padX + 66 * s,
+        sy + 16 * s,
       );
-      ctx.restore();
     });
+    ctx.restore();
   }
 
   const banner = computeStartFinishBannerState(progress, includeFinishPose);
 
-  if (banner.startAlpha > 0.02) {
-    ctx.save();
-    ctx.globalAlpha = banner.startAlpha;
-    const bx = padX;
-    const bw = width - padX * 2;
-    const bh = 68 * s;
-    const by = (138 + banner.startOffsetY) * s;
+  // Overlay Bawah Transparan (Tanpa block hitam solid)
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.90)';
+  ctx.shadowBlur = 8 * s;
+  ctx.shadowOffsetY = 2 * s;
 
-    drawRoundedRect(ctx, bx, by, bw, bh, 14 * s);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
-    ctx.lineWidth = Math.max(1.2, 1.6 * s);
-    ctx.stroke();
-
-    drawRoundedRect(ctx, bx + 14 * s, by + 15 * s, 78 * s, 38 * s, 10 * s);
-    ctx.fillStyle = '#10B981';
-    ctx.fill();
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `800 ${Math.round(15 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText('START', bx + (14 + 39) * s, by + 39 * s);
-
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `700 ${Math.round(17 * s)}px Outfit, sans-serif`;
-    ctx.fillText(
-      `${track.totalDistanceKm.toFixed(2)} KM · ${track.location.slice(0, 24)}`,
-      bx + 106 * s,
-      by + 33 * s,
-    );
-    ctx.fillStyle = '#A7F3D0';
-    ctx.font = `600 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText(
-      (runner.runnerName || 'Pelari').slice(0, 26),
-      bx + 106 * s,
-      by + 53 * s,
-    );
-    ctx.restore();
-  }
-
-  // Kartu Telemetri Bawah / Kartu Summary Ala Strava saat Finish
-  const cardX = padX;
-  const cardW = width - padX * 2;
+  const baseX = padX;
+  const baseW = width - padX * 2;
+  const colW = baseW / 3;
 
   if (banner.finishAlpha > 0.15) {
-    // Strava-Style Activity Summary Card di bagian bawah
-    const cardH = 264 * s;
-    const cardY = height - cardH - 28 * s;
+    // Strava-Style Transparent Finish Summary
+    const topFinishY = height - 226 * s;
 
-    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 20 * s);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(252, 76, 2, 0.72)';
-    ctx.lineWidth = Math.max(1.5, 2 * s);
-    ctx.stroke();
-
-    // Accent bar oranye Strava di sisi kiri kartu
-    drawRoundedRect(ctx, cardX + 14 * s, cardY + 18 * s, 6 * s, 44 * s, 3 * s);
+    drawRoundedRect(ctx, baseX, topFinishY, 5 * s, 38 * s, 2.5 * s);
     ctx.fillStyle = '#FC4C02';
     ctx.fill();
 
     ctx.textAlign = 'left';
     ctx.fillStyle = '#FC4C02';
     ctx.font = `800 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText('ACTIVITY COMPLETED', cardX + 30 * s, cardY + 32 * s);
+    ctx.fillText('ACTIVITY COMPLETED', baseX + 14 * s, topFinishY + 13 * s);
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `700 ${Math.round(19 * s)}px Outfit, sans-serif`;
     ctx.fillText(
-      `${(runner.runnerName || 'Pelari').slice(0, 20)} · ${track.title.slice(0, 18)}`,
-      cardX + 30 * s,
-      cardY + 56 * s,
+      `${runnerNameClean} · ${track.title.slice(0, 20)}`,
+      baseX + 14 * s,
+      topFinishY + 35 * s,
     );
 
-    // 3 Metric Utama Strava Style (Distance | Pace | Time)
     const stravaMetrics = [
       { label: 'DISTANCE', value: `${track.totalDistanceKm.toFixed(2)} km` },
       { label: 'AVG PACE', value: `${formatPace(track.avgPaceSecPerKm)} /km` },
       { label: 'TIME', value: formatDuration(track.totalDurationSec) },
     ];
-    const colW = (cardW - 44 * s) / 3;
     stravaMetrics.forEach((m, idx) => {
-      const mx = cardX + 22 * s + idx * colW;
-      const my = cardY + 96 * s;
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
-      ctx.font = `700 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
+      const mx = baseX + idx * colW;
+      const my = topFinishY + 68 * s;
+      ctx.fillStyle = 'rgba(226, 232, 240, 0.88)';
+      ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
       ctx.fillText(m.label, mx, my);
 
       ctx.fillStyle = '#FFFFFF';
       ctx.font = `800 ${Math.round(23 * s)}px JetBrains Mono, monospace`;
-      ctx.fillText(m.value, mx, my + 27 * s);
+      ctx.fillText(m.value, mx, my + 26 * s);
     });
 
-    // Divider halus
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    ctx.fillRect(cardX + 22 * s, cardY + 142 * s, cardW - 44 * s, Math.max(1, 1 * s));
-
-    // 3 Metric Tambahan (Avg HR | Cadence | Elev Gain)
     const subMetrics = [
       { label: 'AVG HR', value: `${track.avgHr} bpm` },
       { label: 'CADENCE', value: `${track.avgCadence} spm` },
       { label: 'ELEV GAIN', value: `+${track.elevationGainM} m` },
     ];
     subMetrics.forEach((m, idx) => {
-      const mx = cardX + 22 * s + idx * colW;
-      const my = cardY + 168 * s;
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.85)';
+      const mx = baseX + idx * colW;
+      const my = topFinishY + 128 * s;
+      ctx.fillStyle = 'rgba(226, 232, 240, 0.85)';
       ctx.font = `600 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
       ctx.fillText(m.label, mx, my);
 
-      ctx.fillStyle = '#E2E8F0';
+      ctx.fillStyle = '#F8FAFC';
       ctx.font = `700 ${Math.round(18 * s)}px JetBrains Mono, monospace`;
       ctx.fillText(m.value, mx, my + 22 * s);
     });
-
-    // Footer Splits Ringkas di bawah kartu
-    if (allSplits.length > 0) {
-      const splitSummary = allSplits
-        .slice(0, 6)
-        .map((sp) => `${sp.label}:${formatPace(sp.avgPaceSecPerKm)}`)
-        .join('  ');
-      ctx.fillStyle = '#34D399';
-      ctx.font = `700 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
-      ctx.fillText(splitSummary.slice(0, 56), cardX + 22 * s, cardY + 236 * s);
-    }
   } else {
-    // Live Telemetry Card (Compact)
-    const cardH = 204 * s;
-    const cardY = height - cardH - 28 * s;
-
-    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 18 * s);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = Math.max(1, 1.3 * s);
-    ctx.stroke();
-
+    // Live Transparent HUD Telemetry
+    const topLiveY = height - 208 * s;
     const distStr = telemetry.distanceKm.toFixed(2);
+
     ctx.textAlign = 'left';
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `800 ${Math.round(27 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText(distStr, cardX + 20 * s, cardY + 38 * s);
+    ctx.font = `800 ${Math.round(28 * s)}px JetBrains Mono, monospace`;
+    ctx.fillText(distStr, baseX, topLiveY + 26 * s);
     const distW = ctx.measureText(distStr).width;
 
-    ctx.fillStyle = '#34D399';
+    ctx.fillStyle = '#FB923C';
     ctx.font = `700 ${Math.round(13 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText(` / ${track.totalDistanceKm.toFixed(2)} KM`, cardX + 20 * s + distW, cardY + 37 * s);
+    ctx.fillText(` / ${track.totalDistanceKm.toFixed(2)} KM`, baseX + distW, topLiveY + 25 * s);
 
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#E2E8F0';
+    ctx.fillStyle = '#FFFFFF';
     ctx.font = `700 ${Math.round(15 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText(formatDuration(telemetry.elapsedSec), cardX + cardW - 20 * s, cardY + 37 * s);
+    ctx.fillText(formatDuration(telemetry.elapsedSec), baseX + baseW, topLiveY + 25 * s);
     ctx.textAlign = 'left';
 
-    const barX = cardX + 20 * s;
-    const barW = cardW - 40 * s;
-    const barY = cardY + 50 * s;
-    drawRoundedRect(ctx, barX, barY, barW, 6 * s, 3 * s);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+    const barY = topLiveY + 38 * s;
+    drawRoundedRect(ctx, baseX, barY, baseW, 5 * s, 2.5 * s);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
     ctx.fill();
 
-    drawRoundedRect(ctx, barX, barY, Math.max(12 * s, barW * progress), 6 * s, 3 * s);
-    ctx.fillStyle = runner.jerseyColor;
+    drawRoundedRect(ctx, baseX, barY, Math.max(12 * s, baseW * progress), 5 * s, 2.5 * s);
+    ctx.fillStyle = runner.jerseyColor || '#F97316';
     ctx.fill();
 
     const stats = [
@@ -581,15 +511,14 @@ function paintBroadcastHudOverlay(params: {
       { label: 'TIME', value: formatDuration(telemetry.elapsedSec) },
     ];
 
-    const colW = (cardW - 40 * s) / 3;
     stats.forEach((st, idx) => {
       const col = idx % 3;
       const row = Math.floor(idx / 3);
-      const sx = cardX + 20 * s + col * colW;
-      const sy = cardY + (82 + row * 56) * s;
+      const sx = baseX + col * colW;
+      const sy = topLiveY + (68 + row * 56) * s;
 
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.90)';
-      ctx.font = `600 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
+      ctx.fillStyle = 'rgba(226, 232, 240, 0.88)';
+      ctx.font = `600 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
       ctx.fillText(st.label, sx, sy);
 
       ctx.fillStyle = '#FFFFFF';
@@ -597,6 +526,7 @@ function paintBroadcastHudOverlay(params: {
       ctx.fillText(st.value, sx, sy + 22 * s);
     });
   }
+  ctx.restore();
 }
 
 export function pickSupportedVideoMimeType(): {

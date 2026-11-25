@@ -371,6 +371,87 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
     return () => controller.abort();
   }, [track?.id]);
 
+  
+  useEffect(() => {
+    if (!track || track.points.length < 3 || track.elevationGainM > 0) return;
+
+    const controller = new AbortController();
+    const pts = track.points;
+    const sampleCount = Math.min(85, pts.length);
+    const sampledIndices: number[] = [];
+    for (let i = 0; i < sampleCount; i += 1) {
+      const idx = Math.round((i / Math.max(1, sampleCount - 1)) * (pts.length - 1));
+      sampledIndices.push(idx);
+    }
+
+    const lats = sampledIndices.map((i) => pts[i].lat.toFixed(5)).join(',');
+    const lons = sampledIndices.map((i) => pts[i].lon.toFixed(5)).join(',');
+
+    void fetch(
+      `https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lons}`,
+      { signal: controller.signal },
+    )
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data || !Array.isArray(data.elevation) || controller.signal.aborted) return;
+        const elevSamples: number[] = data.elevation.map((v: unknown) =>
+          typeof v === 'number' && Number.isFinite(v) ? v : 0,
+        );
+        if (elevSamples.length !== sampledIndices.length) return;
+
+        // Interpolasi elevasi ke semua titik rute & hitung total elevation gain (threshold 1.5m anti-noise)
+        const updatedPoints = pts.map((pt, ptIdx) => {
+          let sPos = 0;
+          while (sPos < sampledIndices.length - 2 && sampledIndices[sPos + 1] < ptIdx) {
+            sPos += 1;
+          }
+          const idx0 = sampledIndices[sPos];
+          const idx1 = sampledIndices[Math.min(sampledIndices.length - 1, sPos + 1)];
+          const t = idx1 > idx0 ? (ptIdx - idx0) / (idx1 - idx0) : 0;
+          const elev = elevSamples[sPos] + (elevSamples[Math.min(elevSamples.length - 1, sPos + 1)] - elevSamples[sPos]) * t;
+          return { ...pt, elevationM: Math.round(elev * 10) / 10 };
+        });
+
+        let gain = 0;
+        let minE = updatedPoints[0].elevationM;
+        let maxE = updatedPoints[0].elevationM;
+        let anchorE = updatedPoints[0].elevationM;
+
+        for (let i = 1; i < updatedPoints.length; i += 1) {
+          const e = updatedPoints[i].elevationM;
+          if (e < minE) minE = e;
+          if (e > maxE) maxE = e;
+          const diff = e - anchorE;
+          if (diff >= 1.8) {
+            gain += diff;
+            anchorE = e;
+          } else if (diff <= -1.8) {
+            anchorE = e;
+          }
+        }
+
+        const roundedGain = Math.round(gain);
+        if (roundedGain > 0) {
+          setTrack((prev) =>
+            prev && prev.id === track.id
+              ? {
+                  ...prev,
+                  points: updatedPoints,
+                  elevationGainM: roundedGain,
+                  minElevationM: Math.round(minE),
+                  maxElevationM: Math.round(maxE),
+                }
+              : prev,
+          );
+        }
+      })
+      .catch(() => {
+        // Abaikan jika offline
+      });
+
+    return () => controller.abort();
+  }, [track?.id]);
+
   const allKmSplits = useMemo(() => (activeTrack ? computeTrackKmSplits(activeTrack) : []), [activeTrack]);
 
   const visibleKmSplits = useMemo(
@@ -907,7 +988,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   type="button"
                   data-testid="studio3d-empty-upload-btn"
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold inline-flex items-center gap-2 shadow-lg transition-colors cursor-pointer"
+                  className="h-10 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold inline-flex items-center gap-2 shadow-lg transition-colors cursor-pointer"
                 >
                   <FileUp className="w-4 h-4" aria-hidden="true" />
                   <span>Upload .FIT / .GPX</span>
@@ -938,148 +1019,128 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                 </div>
 
                 <div
-                  className="pointer-events-none absolute top-0 inset-x-0 pt-6 pb-5 px-3 pr-[76px] z-10"
+                  className="pointer-events-none absolute top-0 inset-x-0 pt-5 pb-4 px-3 z-10"
                   style={{
                     background:
-                      'linear-gradient(180deg, rgba(2,6,23,0.84) 0%, rgba(2,6,23,0.38) 70%, rgba(2,6,23,0) 100%)',
+                      'linear-gradient(180deg, rgba(2,6,23,0.78) 0%, rgba(2,6,23,0.32) 70%, rgba(2,6,23,0) 100%)',
                   }}
                 >
-                  <div className="min-w-0 space-y-0.5">
-                    <p className="font-mono-tabular text-[9px] font-extrabold tracking-wider text-emerald-400 uppercase truncate">
-                      {runner.runnerName || 'Pelari'}
-                    </p>
-                    <p className="font-display text-xs font-bold text-white truncate">
-                      {activeTrack.title}
-                    </p>
-                    <p className="font-mono-tabular text-[9px] font-medium text-slate-200/85 truncate">
-                      {activeTrack.date} · {activeTrack.location}
-                    </p>
-                  </div>
-                </div>
-
-                {miniMap && (
-                  <div
-                    data-testid="studio3d-gps-minimap"
-                    className="pointer-events-none absolute top-5 right-2.5 z-15 w-14 h-14 rounded-xl bg-slate-950/88 border border-white/20 shadow-lg overflow-hidden"
-                  >
-                    <span className="absolute top-1 left-1.5 font-mono-tabular text-[7px] font-bold text-slate-400 leading-none">
-                      GPS
-                    </span>
-                    <svg
-                      viewBox="0 0 64 64"
-                      className="w-full h-full block"
-                      aria-hidden="true"
-                    >
-                      <polyline
-                        fill="none"
-                        stroke={mapConfig.routeStyle === 'sportbyte-lime' ? '#A6F04B' : '#38BDF8'}
-                        strokeWidth="2.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        points={miniMap.polyline.map((pt) => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(' ')}
-                      />
-                      <circle
-                        cx={miniMap.startPt.x}
-                        cy={miniMap.startPt.y}
-                        r="2.4"
-                        fill={mapConfig.routeStyle === 'sportbyte-lime' ? '#35D07F' : '#10B981'}
-                      />
-                      <circle
-                        cx={miniMap.runnerPt.x}
-                        cy={miniMap.runnerPt.y}
-                        r="3.2"
-                        fill="#FFFFFF"
-                        stroke={mapConfig.routeStyle === 'sportbyte-lime' ? '#14232C' : '#0284C7'}
-                        strokeWidth="1.4"
-                      />
-                    </svg>
-                  </div>
-                )}
-
-                {visibleKmSplits.length > 0 && bannerState.finishAlpha <= 0.15 && (
-                  <div
-                    data-testid="studio3d-km-splits"
-                    className="pointer-events-none absolute top-[72px] left-3 z-10 flex flex-col gap-1"
-                  >
-                    {visibleKmSplits.map((sp, idx) => {
-                      const isNewest = idx === visibleKmSplits.length - 1;
-                      return (
-                        <div
-                          key={sp.index}
-                          className={`rounded-md bg-slate-950/85 px-2 py-0.5 border font-mono-tabular text-[9px] font-bold flex items-center gap-1 shadow-sm transition-all ${
-                            isNewest
-                              ? 'border-emerald-400/65 text-white opacity-95'
-                              : idx === 0 && visibleKmSplits.length === 3
-                                ? 'border-white/15 text-slate-300 opacity-65'
-                                : 'border-white/15 text-slate-100 opacity-82'
-                          }`}
-                        >
-                          <span className={isNewest ? 'text-emerald-400 font-extrabold' : 'text-sky-300'}>
-                            {sp.label} :
-                          </span>
-                          <span>
-                            {formatPace(sp.avgPaceSecPerKm)}/km · {sp.avgHr} bpm
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {bannerState.startAlpha > 0.02 && (
-                  <div
-                    data-testid="studio3d-start-banner"
-                    className="pointer-events-none absolute top-[84px] inset-x-3 z-10 rounded-xl bg-slate-950/90 border border-emerald-500/65 px-2.5 py-1.5 flex items-center gap-2 shadow-lg"
-                    style={{
-                      opacity: bannerState.startAlpha,
-                      transform: `translateY(${(bannerState.startOffsetY * 0.5).toFixed(1)}px)`,
-                    }}
-                  >
-                    <span className="px-2 py-1 rounded-md bg-emerald-500 text-white font-mono-tabular text-[9px] font-extrabold tracking-wider shrink-0">
-                      START
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-display text-[11px] font-bold text-white truncate">
-                        {activeTrack.totalDistanceKm.toFixed(2)} KM · {activeTrack.location}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="h-14 flex flex-col justify-between min-w-0 flex-1 py-0.5 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
+                      <p className="font-mono-tabular text-[10px] font-extrabold tracking-wide text-orange-400 truncate leading-none">
+                        {(runner.runnerName || 'Pelari').trim()}
                       </p>
-                      <p className="font-mono-tabular text-[9px] font-semibold text-emerald-200 truncate">
-                        {runner.runnerName || 'Pelari'}
+                      <p className="font-display text-[13px] font-bold text-white truncate leading-tight">
+                        {activeTrack.title}
+                      </p>
+                      <p className="font-mono-tabular text-[9px] font-medium text-slate-100/90 truncate leading-none">
+                        {activeTrack.location?.trim()
+                          ? `${activeTrack.date} · ${activeTrack.location.trim()}`
+                          : activeTrack.date}
                       </p>
                     </div>
+
+                    {miniMap && (
+                      <div
+                        data-testid="studio3d-gps-minimap"
+                        className="w-14 h-14 rounded-xl bg-slate-950/55 border border-white/25 shadow-md overflow-hidden shrink-0 relative"
+                      >
+                        <span className="absolute top-1 left-1.5 font-mono-tabular text-[7px] font-bold text-slate-200 leading-none">
+                          GPS
+                        </span>
+                        <svg
+                          viewBox="0 0 64 64"
+                          className="w-full h-full block"
+                          aria-hidden="true"
+                        >
+                          <polyline
+                            fill="none"
+                            stroke="#FB923C"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            points={miniMap.polyline.map((pt) => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(' ')}
+                          />
+                          <circle
+                            cx={miniMap.startPt.x}
+                            cy={miniMap.startPt.y}
+                            r="2.4"
+                            fill="#A3E635"
+                          />
+                          <circle
+                            cx={miniMap.runnerPt.x}
+                            cy={miniMap.runnerPt.y}
+                            r="3.2"
+                            fill="#FFFFFF"
+                            stroke="#EA580C"
+                            strokeWidth="1.4"
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {visibleKmSplits.length > 0 && (
+                    <div
+                      data-testid="studio3d-km-splits"
+                      className="mt-2.5 flex flex-col gap-0.5 drop-shadow-[0_1px_4px_rgba(0,0,0,0.92)]"
+                    >
+                      {visibleKmSplits.map((sp, idx) => {
+                        const isNewest =
+                          idx === visibleKmSplits.length - 1 && bannerState.finishAlpha <= 0.15;
+                        return (
+                          <div
+                            key={sp.index}
+                            className="font-mono-tabular text-[9px] font-bold flex items-center gap-2 text-white"
+                          >
+                            <span
+                              className={`w-10 shrink-0 font-extrabold ${
+                                isNewest ? 'text-lime-400' : 'text-orange-400'
+                              }`}
+                            >
+                              KM {sp.label}
+                            </span>
+                            <span>
+                              {formatPace(sp.avgPaceSecPerKm)}/km · {sp.avgHr} bpm
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
                 <div
-                  className="pointer-events-none absolute bottom-0 inset-x-0 pt-8 pb-3 px-2.5 z-10"
+                  className="pointer-events-none absolute bottom-0 inset-x-0 pt-12 pb-3.5 px-3.5 z-10 drop-shadow-[0_2px_6px_rgba(0,0,0,0.92)]"
                   style={{
                     background:
-                      'linear-gradient(0deg, rgba(2,6,23,0.90) 0%, rgba(2,6,23,0.48) 72%, rgba(2,6,23,0) 100%)',
+                      'linear-gradient(0deg, rgba(2,6,23,0.82) 0%, rgba(2,6,23,0.42) 55%, rgba(2,6,23,0) 100%)',
                   }}
                 >
                   {bannerState.finishAlpha > 0.15 ? (
                     <div
                       data-testid="studio3d-finish-banner"
-                      className="rounded-2xl bg-slate-950/92 border border-[#FC4C02]/75 px-3 py-2.5 space-y-2 shadow-xl transition-all"
+                      className="space-y-2 transition-all"
                       style={{
                         opacity: bannerState.finishAlpha,
-                        transform: `translateY(${(bannerState.finishOffsetY * 0.4).toFixed(1)}px)`,
+                        transform: `translateY(${(bannerState.finishOffsetY * 0.35).toFixed(1)}px)`,
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="w-1 h-7 rounded-full bg-[#FC4C02] shrink-0" />
+                        <span className="w-1 h-6 rounded-full bg-[#FC4C02] shrink-0" />
                         <div className="min-w-0">
                           <p className="font-mono-tabular text-[8px] font-extrabold tracking-widest text-[#FC4C02] uppercase">
                             Activity Completed
                           </p>
                           <p className="font-display text-xs font-bold text-white truncate">
-                            {runner.runnerName || 'Pelari'} · {activeTrack.title}
+                            {(runner.runnerName || 'Pelari').trim()} · {activeTrack.title}
                           </p>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                      <div className="grid grid-cols-3 gap-1.5">
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
                             DISTANCE
                           </span>
                           <span className="font-mono-tabular text-xs font-extrabold text-white">
@@ -1087,7 +1148,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
                             AVG PACE
                           </span>
                           <span className="font-mono-tabular text-xs font-extrabold text-white">
@@ -1095,7 +1156,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
                             TIME
                           </span>
                           <span className="font-mono-tabular text-xs font-extrabold text-white">
@@ -1104,72 +1165,62 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-1.5 pt-1.5 border-t border-white/10">
+                      <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-white/15">
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/80">
                             AVG HR
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-slate-200">
+                          <span className="font-mono-tabular text-[10px] font-bold text-slate-100">
                             {activeTrack.avgHr} bpm
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/80">
                             CADENCE
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-slate-200">
+                          <span className="font-mono-tabular text-[10px] font-bold text-slate-100">
                             {activeTrack.avgCadence} spm
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/80">
                             ELEV GAIN
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-slate-200">
+                          <span className="font-mono-tabular text-[10px] font-bold text-slate-100">
                             +{activeTrack.elevationGainM} m
                           </span>
                         </div>
                       </div>
-
-                      {allKmSplits.length > 0 && (
-                        <div className="pt-1 border-t border-white/10 flex flex-wrap gap-x-2 gap-y-0.5 font-mono-tabular text-[8px] font-bold text-emerald-400">
-                          {allKmSplits.slice(0, 6).map((sp) => (
-                            <span key={sp.index}>
-                              {sp.label}:{formatPace(sp.avgPaceSecPerKm)}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   ) : (
-                    <div className="rounded-xl bg-slate-950/86 border border-white/15 px-3 py-2 space-y-1.5">
+                    <div className="space-y-1.5">
                       <div className="flex items-baseline justify-between gap-2">
                         <div className="min-w-0 truncate">
                           <span className="font-mono-tabular text-sm font-extrabold text-white">
                             {liveTelemetry.distanceKm.toFixed(2)}
                           </span>
-                          <span className="font-mono-tabular text-[9px] font-bold text-emerald-400 ml-1">
+                          <span className="font-mono-tabular text-[9px] font-bold text-orange-400 ml-1">
                             / {activeTrack.totalDistanceKm.toFixed(2)} KM
                           </span>
                         </div>
-                        <span className="font-mono-tabular text-[10px] font-bold text-slate-100 shrink-0">
+                        <span className="font-mono-tabular text-[10px] font-bold text-white shrink-0">
                           {formatDuration(liveTelemetry.elapsedSec)}
                         </span>
                       </div>
 
-                      <div className="w-full h-1 rounded-full bg-white/15 overflow-hidden">
+                      <div className="w-full h-1 rounded-full bg-white/25 overflow-hidden">
                         <div
                           className="h-full rounded-full transition-[width] duration-75"
                           style={{
                             width: `${Math.max(2, Math.min(100, progress * 100))}%`,
-                            backgroundColor: runner.jerseyColor,
+                            backgroundColor: runner.jerseyColor || '#F97316',
                           }}
                         />
                       </div>
 
                       <div className="grid grid-cols-3 gap-x-1.5 gap-y-1">
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
                             PACE (/KM)
                           </span>
                           <span className="font-mono-tabular text-[10px] font-bold text-white">
@@ -1177,7 +1228,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
                             HEART RATE
                           </span>
                           <span className="font-mono-tabular text-[10px] font-bold text-white">
@@ -1185,7 +1236,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
                             CADENCE
                           </span>
                           <span className="font-mono-tabular text-[10px] font-bold text-white">
@@ -1193,7 +1244,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
                             DISTANCE
                           </span>
                           <span className="font-mono-tabular text-[10px] font-bold text-white">
@@ -1201,7 +1252,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
                             ELEV GAIN
                           </span>
                           <span className="font-mono-tabular text-[10px] font-bold text-white">
@@ -1209,7 +1260,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
                             TIME
                           </span>
                           <span className="font-mono-tabular text-[10px] font-bold text-white">
@@ -1232,7 +1283,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
             onClick={handleTogglePlay}
             disabled={isExporting || !track}
             aria-label={isPlaying ? 'Pause animasi' : 'Putar animasi'}
-            className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white inline-flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+            className="w-9 h-9 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white inline-flex items-center justify-center shrink-0 cursor-pointer transition-colors"
           >
             {isPlaying ? (
               <Pause className="w-4 h-4" aria-hidden="true" />
@@ -1364,7 +1415,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                 onChange={(e) =>
                   setMapConfig((prev) => ({ ...prev, cameraZoom: Number(e.target.value) }))
                 }
-                className="flex-1 accent-blue-600 cursor-pointer"
+                className="flex-1 accent-orange-500 cursor-pointer"
               />
               <span className="font-mono-tabular text-[11px] font-bold text-slate-800 dark:text-slate-100 w-9 text-right shrink-0">
                 {(mapConfig.cameraZoom ?? 1.0).toFixed(1)}×

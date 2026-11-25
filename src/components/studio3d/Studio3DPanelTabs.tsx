@@ -146,7 +146,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
               onClick={() => onChangeTab(tab.id)}
               className={`h-9 px-3.5 rounded-t-xl text-xs font-bold inline-flex items-center gap-1.5 border-b-2 transition-colors cursor-pointer ${
                 active
-                  ? 'border-blue-600 bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400'
+                  ? 'border-blue-600 bg-white dark:bg-slate-900 text-orange-500 dark:text-orange-400'
                   : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
@@ -347,7 +347,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                 )}
 
                 {avatarStorageNotice && (
-                  <p className="text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                  <p className="text-[10px] font-medium text-orange-500 dark:text-orange-400">
                     {avatarStorageNotice}
                   </p>
                 )}
@@ -973,7 +973,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                         includeFinishPose: e.target.checked,
                       }))
                     }
-                    className="accent-blue-600 rounded"
+                    className="accent-orange-500 rounded"
                   />
                   <span>Sertakan Selebrasi Finish di Akhir Video</span>
                 </label>
@@ -1065,7 +1065,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                         volume: Number(e.target.value),
                       }))
                     }
-                    className="flex-1 accent-blue-600 cursor-pointer"
+                    className="flex-1 accent-orange-500 cursor-pointer"
                   />
                   <span className="font-mono-tabular text-[11px] font-bold text-slate-700 dark:text-slate-200 w-9 text-right">
                     {Math.round(exportConfig.volume * 100)}%

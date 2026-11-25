@@ -27,7 +27,7 @@ export const PublicStudio3DHeader: React.FC<PublicStudio3DHeaderProps> = ({
     >
       <div className="max-w-[1380px] mx-auto px-3 sm:px-5 h-12 flex items-center justify-between gap-2">
         <div className="inline-flex items-center gap-2 font-display text-base font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap shrink-0">
-          <span className="w-6 h-6 rounded-md bg-blue-600 text-white inline-flex items-center justify-center text-[11px] font-extrabold shrink-0">
+          <span className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500 to-amber-500 text-white inline-flex items-center justify-center text-[11px] font-extrabold shrink-0 shadow-xs">
             3D
           </span>
           <span>Sport Byte</span>
@@ -38,7 +38,7 @@ export const PublicStudio3DHeader: React.FC<PublicStudio3DHeaderProps> = ({
             type="button"
             data-testid="header-upload-gpx-btn"
             onClick={onTriggerUpload}
-            className="h-8 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-colors cursor-pointer"
+            className="h-8 px-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-colors cursor-pointer shadow-xs"
           >
             <FileUp className="w-3.5 h-3.5" aria-hidden="true" />
             <span>GPX / FIT</span>
