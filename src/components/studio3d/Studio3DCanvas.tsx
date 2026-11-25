@@ -220,14 +220,14 @@ const SceneContent: React.FC<
 
   const characterSizeFactor =
     runner.characterSize === 'small'
-      ? 0.72
+      ? 0.48
       : runner.characterSize === 'large'
-        ? 1.45
-        : 1.05;
+        ? 1.05
+        : 0.72;
 
   // Skala atlet proporsional terhadap ketinggian kamera drone agar selalu jelas terlihat
   const runnerScale = useMemo(
-    () => Math.max(4.8, Math.min(18.0, track.spanMeters * 0.0095 * characterSizeFactor)),
+    () => Math.max(3.2, Math.min(26.0, track.spanMeters * 0.0095 * characterSizeFactor)),
     [track.spanMeters, characterSizeFactor],
   );
 
