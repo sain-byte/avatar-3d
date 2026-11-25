@@ -1,3 +1,4 @@
+import type { OverlayTheme3D } from '../../types/studio3d';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Camera,
