@@ -547,7 +547,7 @@ const SceneContent: React.FC<
           isManualFinishCamera={mapConfig.cameraMode === 'finish-pose'}
           timelineProgress={timelineProgress}
           onStatusChange={onCustomModelStatus}
-        /></CanvasErrorBoundary>
+        /></WebGLErrorBoundary>
       ) : (
         <RealisticRunner3D
           config={effectiveRunnerConfig}
