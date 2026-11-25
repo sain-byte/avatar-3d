@@ -533,21 +533,42 @@ const SceneContent: React.FC<
       </group>
 
       {runner.characterStyle === 'custom-glb' && runner.customModelUrl ? (
-        <WebGLErrorBoundary key={runner.customModelUrl || "no-glb"} onErrorFallback={<RealisticRunner3D config={effectiveRunnerConfig} position={runnerPos} yawRef={smoothYawRef} slopePitchRad={slopePitchRad} scale={runnerScale} cadenceSpm={currentCadence} paceSecPerKm={currentPaceSec} isPlaying={isPlaying} isFinishPose={isFinishPhase} includeFinishPose={includeFinishPose} isManualFinishCamera={mapConfig.cameraMode === 'finish-pose'} timelineProgress={timelineProgress} isNightMood={isNightMood} />><CustomGlbRunner3D
-          config={effectiveRunnerConfig}
-          position={runnerPos}
-          yawRef={smoothYawRef}
-          slopePitchRad={slopePitchRad}
-          scale={runnerScale}
-          cadenceSpm={currentCadence}
-          paceSecPerKm={currentPaceSec}
-          isPlaying={isPlaying}
-          isFinishPose={isFinishPhase}
-          includeFinishPose={includeFinishPose}
-          isManualFinishCamera={mapConfig.cameraMode === 'finish-pose'}
-          timelineProgress={timelineProgress}
-          onStatusChange={onCustomModelStatus}
-        /></WebGLErrorBoundary>
+        <WebGLErrorBoundary
+          key={runner.customModelUrl || "no-glb"}
+          onErrorFallback={
+            <RealisticRunner3D
+              config={effectiveRunnerConfig}
+              position={runnerPos}
+              yawRef={smoothYawRef}
+              slopePitchRad={slopePitchRad}
+              scale={runnerScale}
+              cadenceSpm={currentCadence}
+              paceSecPerKm={currentPaceSec}
+              isPlaying={isPlaying}
+              isFinishPose={isFinishPhase}
+              includeFinishPose={includeFinishPose}
+              isManualFinishCamera={mapConfig.cameraMode === "finish-pose"}
+              timelineProgress={timelineProgress}
+              isNightMood={isNightMood}
+            />
+          }
+        >
+          <CustomGlbRunner3D
+            config={effectiveRunnerConfig}
+            position={runnerPos}
+            yawRef={smoothYawRef}
+            slopePitchRad={slopePitchRad}
+            scale={runnerScale}
+            cadenceSpm={currentCadence}
+            paceSecPerKm={currentPaceSec}
+            isPlaying={isPlaying}
+            isFinishPose={isFinishPhase}
+            includeFinishPose={includeFinishPose}
+            isManualFinishCamera={mapConfig.cameraMode === "finish-pose"}
+            timelineProgress={timelineProgress}
+            onStatusChange={onCustomModelStatus}
+          />
+        </WebGLErrorBoundary>
       ) : (
         <RealisticRunner3D
           config={effectiveRunnerConfig}
