@@ -231,10 +231,22 @@ const SceneContent: React.FC<
     [track.spanMeters, characterSizeFactor],
   );
 
-  const { runnerPos, rawRunnerYaw } = useMemo(() => {
+  const { runnerPos, rawRunnerYaw, slopePitchRad } = useMemo(() => {
     const sampled = sampleGroundedRouteAtProgress(groundedPath, routeProgress);
-    return { runnerPos: sampled.position, rawRunnerYaw: sampled.yawRad };
-  }, [groundedPath, routeProgress]);
+    let pitch = 0;
+    const pts = track.points;
+    if (pts && pts.length >= 3) {
+      const idx = Math.min(pts.length - 1, Math.max(0, Math.round(routeProgress * (pts.length - 1))));
+      const prevIdx = Math.max(0, idx - 2);
+      const nextIdx = Math.min(pts.length - 1, idx + 2);
+      const dDistM = Math.max(2, (pts[nextIdx].distanceKm - pts[prevIdx].distanceKm) * 1000);
+      const dElevM = (pts[nextIdx].elevationM ?? 0) - (pts[prevIdx].elevationM ?? 0);
+      const grade = THREE.MathUtils.clamp(dElevM / dDistM, -0.25, 0.25);
+      // Positif = condong ke depan saat menanjak, negatif = menahan saat turunan
+      pitch = THREE.MathUtils.clamp(grade * 0.65, -0.14, 0.16);
+    }
+    return { runnerPos: sampled.position, rawRunnerYaw: sampled.yawRad, slopePitchRad: pitch };
+  }, [groundedPath, routeProgress, track.points]);
 
   const smoothYawRef = useRef<number>(rawRunnerYaw);
   const rimLightRef = useRef<THREE.DirectionalLight>(null);
@@ -458,8 +470,8 @@ const SceneContent: React.FC<
 
       <directionalLight
         ref={rimLightRef}
-        color="#E0F2FE"
-        intensity={0.95}
+        color={mood.rimColor}
+        intensity={isNightMood ? 1.25 : 0.9}
         position={[0, 30, -30]}
       />
       <directionalLight
@@ -521,6 +533,7 @@ const SceneContent: React.FC<
           config={effectiveRunnerConfig}
           position={runnerPos}
           yawRef={smoothYawRef}
+          slopePitchRad={slopePitchRad}
           scale={runnerScale}
           cadenceSpm={currentCadence}
           paceSecPerKm={currentPaceSec}
@@ -536,6 +549,7 @@ const SceneContent: React.FC<
           config={effectiveRunnerConfig}
           position={runnerPos}
           yawRef={smoothYawRef}
+          slopePitchRad={slopePitchRad}
           scale={runnerScale}
           cadenceSpm={currentCadence}
           paceSecPerKm={currentPaceSec}

@@ -38,6 +38,7 @@ interface CustomGlbRunner3DProps {
   config: RunnerConfig;
   position: THREE.Vector3;
   yawRef: React.MutableRefObject<number>;
+  slopePitchRad?: number;
   scale: number;
   cadenceSpm: number;
   paceSecPerKm: number;
@@ -96,6 +97,7 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
   config,
   position,
   yawRef,
+  slopePitchRad = 0,
   scale,
   cadenceSpm,
   paceSecPerKm,
@@ -133,6 +135,7 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
   const rigModeRef = useRef<'clip' | 'bones' | 'static'>('static');
   const runClockRef = useRef(0);
   const prevYawRef = useRef(yawRef.current);
+  const smoothSlopeRef = useRef(0);
   const finishBlendRef = useRef(isFinishPose ? 1 : 0);
   const prevScrubRef = useRef(timelineProgress);
   const prevPoseStyleRef = useRef(config.finishPoseStyle ?? 'celebrate-jump');
@@ -451,7 +454,9 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
     rootRef.current.position.copy(position);
     rootRef.current.scale.setScalar(scale);
     const currentYaw = yawRef.current;
+    smoothSlopeRef.current = THREE.MathUtils.damp(smoothSlopeRef.current, slopePitchRad, 4.5, dt);
     rootRef.current.rotation.y = currentYaw;
+    rootRef.current.rotation.x = smoothSlopeRef.current;
 
     let yawDiff = currentYaw - prevYawRef.current;
     while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
@@ -841,7 +846,7 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
       {/* Grounded contact shadow disc */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow>
         <circleGeometry args={[0.46, 24]} />
-        <meshBasicMaterial color="#020617" transparent opacity={0.28} depthWrite={false} />
+        <meshBasicMaterial color="#020617" transparent opacity={0.46} depthWrite={false} />
       </mesh>
 
       <instancedMesh

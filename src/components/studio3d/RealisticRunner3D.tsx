@@ -21,6 +21,7 @@ interface RealisticRunner3DProps {
   config: RunnerConfig;
   position: THREE.Vector3;
   yawRef: React.MutableRefObject<number>;
+  slopePitchRad?: number;
   scale: number;
   cadenceSpm: number;
   paceSecPerKm: number;
@@ -40,6 +41,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
   config,
   position,
   yawRef,
+  slopePitchRad = 0,
   scale,
   cadenceSpm,
   paceSecPerKm,
@@ -68,6 +70,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
   const ponytailRef = useRef<THREE.Group>(null);
   const confettiRef = useRef<THREE.InstancedMesh>(null);
   const prevYawRef = useRef(yawRef.current);
+  const smoothSlopeRef = useRef(0);
   const runClockRef = useRef(0);
   const finishBlendRef = useRef(isFinishPose ? 1 : 0);
   const prevScrubRef = useRef(timelineProgress);
@@ -109,7 +112,9 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
     prevYawRef.current = currentYaw;
     const turnLean = THREE.MathUtils.clamp(yawDiff * 3.0, -0.18, 0.18);
 
+    smoothSlopeRef.current = THREE.MathUtils.damp(smoothSlopeRef.current, slopePitchRad, 4.5, dt);
     rootRef.current.rotation.y = currentYaw;
+    rootRef.current.rotation.x = smoothSlopeRef.current;
 
     const gait = resolveGaitProfile(config.gaitMode ?? 'auto', paceSecPerKm, cadenceSpm);
     const targetFinishBlend = Math.max(
@@ -311,7 +316,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
       {/* Grounded contact shadow disc */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]} receiveShadow>
         <circleGeometry args={[0.48, 24]} />
-        <meshBasicMaterial color="#020617" transparent opacity={0.28} depthWrite={false} />
+        <meshBasicMaterial color="#020617" transparent opacity={0.46} depthWrite={false} />
       </mesh>
 
       {/* Celebratory Finish Confetti InstancedMesh */}
