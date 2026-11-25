@@ -184,7 +184,7 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
   durationPreset: 30,
   customDurationSec: 25,
   includeFinishPose: false,
-  musicPreset: 'upbeat-synth',
+  musicPreset: 'none',
   customAudioUrl: null,
   customAudioName: null,
   volume: 0.65,

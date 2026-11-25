@@ -126,13 +126,13 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
       <div
         role="tablist"
         aria-label="Pengaturan Studio Animasi 3D"
-        className="flex items-center border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 px-2 pt-2 gap-1"
+        className="grid grid-cols-3 gap-1.5 p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-950"
       >
         {(
           [
-            { id: 'pelari', label: 'Karakter Pelari', icon: <User className="w-3.5 h-3.5" aria-hidden="true" /> },
-            { id: 'peta', label: 'Peta & Rute', icon: <MapIcon className="w-3.5 h-3.5" aria-hidden="true" /> },
-            { id: 'export', label: 'Export Video 9:16', icon: <Film className="w-3.5 h-3.5" aria-hidden="true" /> },
+            { id: 'pelari', label: 'Pelari 3D', icon: <User className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> },
+            { id: 'peta', label: 'Peta & Rute', icon: <MapIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> },
+            { id: 'export', label: 'Export 9:16', icon: <Film className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> },
           ] as Array<{ id: Studio3DTab; label: string; icon: React.ReactNode }>
         ).map((tab) => {
           const active = activeTab === tab.id;
@@ -144,14 +144,14 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
               aria-selected={active}
               data-testid={`studio3d-tab-${tab.id}`}
               onClick={() => onChangeTab(tab.id)}
-              className={`h-9 px-3.5 rounded-t-xl text-xs font-bold inline-flex items-center gap-1.5 border-b-2 transition-colors cursor-pointer ${
+              className={`h-10 px-2 rounded-xl text-[11px] sm:text-xs font-bold inline-flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
                 active
-                  ? 'border-blue-600 bg-white dark:bg-slate-900 text-orange-500 dark:text-orange-400'
-                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'border-orange-500/80 bg-orange-500 text-white shadow-sm shadow-orange-500/25'
+                  : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
               {tab.icon}
-              <span>{tab.label}</span>
+              <span className="truncate">{tab.label}</span>
             </button>
           );
         })}
@@ -718,53 +718,6 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                     <span>Efek Glow Rute</span>
                   </label>
                 </div>
-              </div>
-
-              <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Penyesuaian Jalur
-                </span>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {(
-                    [
-                      { id: 'raw', label: 'GPS Asli' },
-                      { id: 'snap-road', label: 'Snap ke Jalan (Maps)' },
-                    ] as Array<{ id: RouteSnapMode3D; label: string }>
-                  ).map((sm) => {
-                    const active = (mapConfig.routeSnapMode ?? 'raw') === sm.id;
-                    return (
-                      <button
-                        key={sm.id}
-                        type="button"
-                        data-testid={`studio3d-routesnap-${sm.id}`}
-                        onClick={() =>
-                          onChangeMapConfig((prev) => ({ ...prev, routeSnapMode: sm.id }))
-                        }
-                        className={`h-8 px-2.5 rounded-lg border text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                          active
-                            ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
-                            : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        {sm.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {(mapConfig.routeSnapMode ?? 'raw') === 'snap-road' && (
-                  <p
-                    data-testid="studio3d-routesnap-status"
-                    className="text-[10px] font-medium text-slate-500 dark:text-slate-400"
-                  >
-                    {routeSnapStatus === 'matching'
-                      ? 'Menyelaraskan rute GPS ke jalan OSM...'
-                      : routeSnapStatus === 'matched'
-                        ? 'Rute terselaraskan ke jalan (OSRM).'
-                        : routeSnapStatus === 'fallback'
-                          ? 'Jalan sekitar tidak ditemukan, memakai GPS asli.'
-                          : 'Siap menyelaraskan ke jalan.'}
-                  </p>
-                )}
               </div>
 
               <p className="text-[10px] text-slate-400 dark:text-slate-500 pt-1">
