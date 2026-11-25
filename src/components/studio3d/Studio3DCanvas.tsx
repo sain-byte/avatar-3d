@@ -506,6 +506,7 @@ const SceneContent: React.FC<
         buildings3d={mapConfig.buildings3d}
         showKmPins={mapConfig.showKmPins ?? false}
         showRouteGlow={mapConfig.showRouteGlow ?? false}
+        routeThickness={mapConfig.routeThickness ?? 'thin'}
         isNight={isNightMood}
         jerseyColor={runner.jerseyColor}
         routeProgress={routeProgress}
@@ -519,12 +520,12 @@ const SceneContent: React.FC<
       {/* Beacon ring di bawah kaki pelari agar posisi atlet selalu jelas di atas jalan */}
       <group position={[runnerPos.x, runnerPos.y + 0.08, runnerPos.z]}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[runnerScale * 0.52, runnerScale * 0.78, 32]} />
-          <meshBasicMaterial color={mapConfig.overlayColor ?? '#F97316'} transparent opacity={0.85} side={THREE.DoubleSide} />
+          <ringGeometry args={[runnerScale * 0.36, runnerScale * 0.50, 32]} />
+          <meshBasicMaterial color={mapConfig.overlayColor ?? '#F97316'} transparent opacity={0.48} side={THREE.DoubleSide} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-          <circleGeometry args={[runnerScale * 0.54, 32]} />
-          <meshBasicMaterial color="#090D16" transparent opacity={0.55} />
+          <circleGeometry args={[runnerScale * 0.38, 32]} />
+          <meshBasicMaterial color="#090D16" transparent opacity={0.35} />
         </mesh>
       </group>
 

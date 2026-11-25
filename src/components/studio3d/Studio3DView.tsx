@@ -810,8 +810,8 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
   const isMapLoading = mapLoadStatus.phase === 'loading';
 
   return (
-    <div data-testid="view-studio3d" className="space-y-4">
-      <header className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 shadow-xs space-y-1.5">
+    <div data-testid="view-studio3d" className="space-y-2">
+      <header className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 shadow-xs space-y-1.5 ${runs.length === 0 && !inputError ? "hidden" : ""}`}>
         <div className="flex items-center justify-between gap-2">
 
 
@@ -865,7 +865,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
 
       <section
         data-testid="studio3d-preview-stage"
-        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col items-center gap-3.5"
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 sm:p-4 shadow-xs flex flex-col items-center gap-2.5"
       >
         <div className="w-full max-w-[350px] sm:max-w-[370px] rounded-[36px] p-2.5 bg-slate-900 dark:bg-slate-800 border-4 border-slate-800 dark:border-slate-700 shadow-2xl">
           <div
@@ -1466,6 +1466,32 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
             <span className="font-mono-tabular text-[10px] font-semibold text-slate-500 dark:text-slate-400">
               Garis:
             </span>
+            <div className="inline-flex items-center rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden mr-0.5">
+              {(
+                [
+                  { id: 'thin', label: '1×' },
+                  { id: 'normal', label: '2×' },
+                  { id: 'thick', label: '3×' },
+                ] as const
+              ).map((th) => {
+                const activeTh = (mapConfig.routeThickness ?? 'thin') === th.id;
+                return (
+                  <button
+                    key={th.id}
+                    type="button"
+                    title={`Ketebalan garis ${th.label}`}
+                    onClick={() => setMapConfig((prev) => ({ ...prev, routeThickness: th.id }))}
+                    className={`px-1.5 py-0.5 text-[9px] font-bold cursor-pointer transition-colors ${
+                      activeTh
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    {th.label}
+                  </button>
+                );
+              })}
+            </div>
             {['#F97316', '#0F172A', '#38BDF8', '#A3E635', '#F43F5E'].map((hex) => {
               const active = (mapConfig.overlayColor || '#F97316').toLowerCase() === hex.toLowerCase();
               return (

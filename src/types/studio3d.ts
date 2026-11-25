@@ -79,6 +79,7 @@ export interface MapConfig {
   overlayBox?: boolean;
   showKmPins?: boolean;
   showRouteGlow?: boolean;
+  routeThickness?: 'thin' | 'normal' | 'thick';
 }
 
 export type DurationPresetSec = 15 | 30 | 45 | 60 | 'custom';
@@ -178,6 +179,7 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   overlayBox: true,
   showKmPins: false,
   showRouteGlow: false,
+  routeThickness: 'thin',
 };
 
 export const DEFAULT_EXPORT_CONFIG: ExportConfig = {

@@ -57,6 +57,7 @@ interface TerrainMap3DProps {
   buildings3d: boolean;
   showKmPins?: boolean;
   showRouteGlow?: boolean;
+  routeThickness?: 'thin' | 'normal' | 'thick';
   isNight: boolean;
   jerseyColor: string;
   routeProgress: number;
@@ -196,6 +197,7 @@ function _oldSyncHairlineRouteOnMap(
   accentColor: string,
   darkTheme: boolean,
   showRouteGlow = false,
+  routeThickness = 'thin',
 ) {
   if (!map.isStyleLoaded() || track.points.length < 2) return;
 
@@ -625,7 +627,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
         accentColor={overlayColor}
         isDark={isDarkMapTheme(mapStyle)}
         showRouteGlow={showRouteGlow}
-        ribbonWidth={Math.max(1.1, Math.min(3.2, track.spanMeters * 0.0014))}
+        ribbonWidth={Math.max(0.45, Math.min(1.6, track.spanMeters * 0.00075)) * (routeThickness === 'thick' ? 2.1 : routeThickness === 'normal' ? 1.4 : 0.85)}
       />
 
       {showKmPins && landmarkMarkers.map((item) => (
