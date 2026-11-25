@@ -186,7 +186,20 @@ function smoothGeoCoords(coords: number[][]): number[][] {
   return pts;
 }
 
-function 
+function syncHairlineRouteOnMap(
+  _unused?: unknown,
+) { return; }
+function _oldSyncHairlineRouteOnMap(
+  map: maplibregl.Map,
+  track: Studio3DTrack,
+  routeProgress: number,
+  accentColor: string,
+  darkTheme: boolean,
+  showRouteGlow = false,
+) {
+  if (!map.isStyleLoaded() || track.points.length < 2) return;
+
+  const fullCoords = smoothGeoCoords(track.points.map((p) => [p.lon, p.lat]));
   const activeCount = Math.max(
     2,
     Math.min(fullCoords.length, Math.ceil(routeProgress * (fullCoords.length - 1)) + 1),
@@ -451,7 +464,14 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
 
     const handleLoad = () => {
       add3DBuildingsToMap(map, currentModeRef.current, buildings3dRef.current);
-      
+      syncHairlineRouteOnMap(
+        map,
+        track,
+        routeProgress,
+        overlayColor,
+        isDarkMapTheme(currentModeRef.current),
+        showRouteGlow,
+      );
       onMapLoadStatus?.({
         phase: 'ready',
         loadedTiles: 1,
@@ -505,7 +525,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     map.setStyle(MAP_STYLES[mapStyle]);
     map.once('style.load', () => {
       add3DBuildingsToMap(map, mapStyle, buildings3dRef.current);
-      
+      syncHairlineRouteOnMap(map, track, routeProgress, overlayColor, isDarkMapTheme(mapStyle), showRouteGlow);
       onMapLoadStatus?.({
         phase: 'ready',
         loadedTiles: 1,
@@ -525,7 +545,14 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
   useFrame(() => {
     const map = mapRef.current;
     if (!map) return;
-    
+    syncHairlineRouteOnMap(
+      map,
+      track,
+      routeProgress,
+      overlayColor,
+      isDarkMapTheme(currentModeRef.current),
+        showRouteGlow,
+      );
 
     const fwd = forwardVecRef.current;
     camera.getWorldDirection(fwd);
