@@ -187,7 +187,7 @@ function smoothGeoCoords(coords: number[][]): number[][] {
 }
 
 function syncHairlineRouteOnMap(
-  _unused?: unknown,
+  ..._args: unknown[]
 ) { return; }
 function _oldSyncHairlineRouteOnMap(
   map: maplibregl.Map,
