@@ -925,9 +925,9 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
           <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
-              onClick={() => setMapConfig((prev) => ({ ...prev, mapStyle: 'light' }))}
+              onClick={() => setMapConfig((prev) => ({ ...prev, mapStyle: 'clean' }))}
               className={`h-7 px-2.5 rounded-lg border text-[11px] font-semibold cursor-pointer ${
-                mapConfig.mapStyle === 'light'
+                mapConfig.mapStyle === 'clean'
                   ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300'
                   : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300'
               }`}

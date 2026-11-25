@@ -270,7 +270,7 @@ export function computeMiniMapGeometry(
   };
 }
 
-function resolveOverlayPrimaryText(mode: string | undefined, mapStyle: 'light' | 'dark' | undefined): {
+function resolveOverlayPrimaryText(mode: string | undefined, mapStyle: 'clean' | 'street' | 'dark' | 'satellite' | undefined): {
   primary: string;
   secondary: string;
   stroke: string;

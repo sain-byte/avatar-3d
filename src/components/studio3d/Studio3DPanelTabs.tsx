@@ -604,9 +604,9 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                   <button
                     type="button"
                     data-testid="studio3d-mapstyle-light"
-                    onClick={() => onChangeMapConfig((prev) => ({ ...prev, mapStyle: 'light' }))}
+                    onClick={() => onChangeMapConfig((prev) => ({ ...prev, mapStyle: 'clean' }))}
                     className={`h-9 px-3 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
-                      mapConfig.mapStyle === 'light'
+                      mapConfig.mapStyle === 'clean'
                         ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
                         : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
