@@ -89,6 +89,51 @@ function isUsableAnimationClip(clip: THREE.AnimationClip): boolean {
   return clip.tracks.length > 0;
 }
 
+/**
+ * Memangkas ekor frame kosong (freeze) di akhir klip GLB dan menahan translasi horizontal
+ * pada root/hips agar siklus lari berulang (LoopRepeat) 100% mulus tanpa jeda atau lompat balik.
+ */
+function prepareSeamlessRunClip(rawClip: THREE.AnimationClip): THREE.AnimationClip {
+  const clip = rawClip.clone();
+  let lastActiveTime = 0;
+
+  for (const track of clip.tracks) {
+    const times = track.times;
+    const values = track.values;
+    const stride = track.getValueSize();
+    if (!times || times.length < 2 || stride <= 0) continue;
+
+    // Tahan pergerakan maju/samping (X & Z) pada root/hips agar tidak teleport balik saat loop
+    if (/\.position$/i.test(track.name) && /(root|hips|pelvis|armature)/i.test(track.name)) {
+      const baseX = values[0];
+      const baseZ = values[2];
+      for (let i = 0; i < times.length; i += 1) {
+        values[i * stride] = baseX;
+        values[i * stride + 2] = baseZ;
+      }
+    }
+
+    let lastIdx = times.length - 1;
+    while (lastIdx > 0) {
+      let diff = 0;
+      for (let k = 0; k < stride; k += 1) {
+        diff += Math.abs(values[lastIdx * stride + k] - values[(lastIdx - 1) * stride + k]);
+      }
+      if (diff > 1e-4) break;
+      lastIdx -= 1;
+    }
+    if (times[lastIdx] > lastActiveTime) {
+      lastActiveTime = times[lastIdx];
+    }
+  }
+
+  if (lastActiveTime >= 0.25 && lastActiveTime < clip.duration - 0.03) {
+    clip.trim(0, lastActiveTime);
+    clip.duration = lastActiveTime;
+  }
+  return clip;
+}
+
 function pickClip(clips: THREE.AnimationClip[], pattern: RegExp): THREE.AnimationClip | null {
   return clips.find((c) => pattern.test(c.name)) ?? null;
 }
@@ -225,16 +270,25 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
         const locomotionClip = usableClips.find(isClipLocomotion) ?? null;
 
         const mixer = new THREE.AnimationMixer(sceneObj);
-        const runClip =
+        const rawRunClip =
           locomotionClip ??
           pickClip(usableClips, /run|jog|sprint|stride|walk/i) ??
           usableClips[0] ??
           null;
+        const runClip = rawRunClip ? prepareSeamlessRunClip(rawRunClip) : null;
         const idleClip =
           pickClip(usableClips, /idle|stand|breath|victory|celebrate|cheer/i) ?? null;
 
         const runAction = runClip ? mixer.clipAction(runClip) : null;
-        const idleAction = idleClip && idleClip !== runClip ? mixer.clipAction(idleClip) : null;
+        if (runAction) {
+          runAction.setLoop(THREE.LoopRepeat, Infinity);
+          runAction.clampWhenFinished = false;
+        }
+        const idleAction = idleClip && idleClip !== rawRunClip ? mixer.clipAction(idleClip) : null;
+        if (idleAction) {
+          idleAction.setLoop(THREE.LoopRepeat, Infinity);
+          idleAction.clampWhenFinished = false;
+        }
 
         const { rig, fingers, count, totalSkeletonBones, axes } = extractFullHumanoidRig(sceneObj);
         const hasLimbRig = Boolean(
@@ -248,11 +302,11 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
           detectedRigMode = 'bones';
         } else if (prefMode === 'clip' && usableClips.length > 0) {
           detectedRigMode = 'clip';
-        } else if (hasLimbRig) {
-          // Engage full 52-bone humanoid rig by default for both running and Finish poses
-          detectedRigMode = 'bones';
         } else if (hasLocomotionClip || usableClips.length > 0) {
+          // Prioritaskan klip animasi bawaan GLB jika tersedia
           detectedRigMode = 'clip';
+        } else if (hasLimbRig) {
+          detectedRigMode = 'bones';
         }
 
         if (detectedRigMode === 'clip') {
@@ -331,10 +385,10 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
       nextMode = 'bones';
     } else if (prefMode === 'clip' && meta.animationCount > 0) {
       nextMode = 'clip';
-    } else if (meta.hasLimbRig) {
-      nextMode = 'bones';
     } else if (meta.hasLocomotionClip || meta.animationCount > 0) {
       nextMode = 'clip';
+    } else if (meta.hasLimbRig) {
+      nextMode = 'bones';
     }
 
     rigModeRef.current = nextMode;
@@ -558,7 +612,8 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
           const speedScale = Math.max(0.35, (cadenceSpm / 165) * gait.freqScale * preFinishGaitScale);
           mixer.update(dt * speedScale);
         } else {
-          mixer.setTime((timelineProgress * 24 * gait.freqScale) % 10);
+          const clipDur = Math.max(0.25, runAction?.getClip().duration ?? 0.85);
+          mixer.setTime((timelineProgress * 24 * gait.freqScale) % clipDur);
         }
       }
     }
