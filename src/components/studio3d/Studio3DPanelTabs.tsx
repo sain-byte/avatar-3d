@@ -226,6 +226,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                 <div className="grid grid-cols-3 gap-1.5 pt-1">
                   {(
                     [
+                      { id: 'standing-idle', label: 'Berdiri Santai' },
                       { id: 'hands-on-hips', label: 'Tangan Pinggang' },
                       { id: 'check-watch', label: 'Cek Jam' },
                       { id: 'casual-wave', label: 'Sapa Santai' },

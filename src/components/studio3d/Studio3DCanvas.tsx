@@ -355,16 +355,16 @@ const SceneContent: React.FC<
       camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 0.9, runnerPos.z);
     } else if (effectiveMode === 'finish-pose') {
       const finishZoom = THREE.MathUtils.clamp(zoom, 0.75, 1.55);
-      const orbitOffset = Math.sin(state.clock.elapsedTime * 0.65) * 0.12;
-      const frontAngle = runnerYaw + orbitOffset;
-      const heroDist = runnerScale * 6.5 * finishZoom;
-      const heroHeight = runnerScale * 2.2 * finishZoom;
+      const orbitOffset = Math.sin(state.clock.elapsedTime * 0.55) * 0.14;
+      const frontAngle = runnerYaw + 0.22 + orbitOffset;
+      const heroDist = runnerScale * 5.2 * finishZoom;
+      const heroHeight = runnerScale * 1.32 * finishZoom;
       camTargetPosRef.current.set(
         runnerPos.x + Math.sin(frontAngle) * heroDist,
         runnerPos.y + heroHeight,
         runnerPos.z + Math.cos(frontAngle) * heroDist,
       );
-      camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 1.45, runnerPos.z);
+      camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 1.15, runnerPos.z);
     } else {
       const trailAngle = runnerYaw + Math.PI * 0.88;
       const camX = runnerPos.x + Math.sin(trailAngle) * droneBackDist;
