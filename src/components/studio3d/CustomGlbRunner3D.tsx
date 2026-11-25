@@ -95,7 +95,10 @@ function isUsableAnimationClip(clip: THREE.AnimationClip): boolean {
  */
 function prepareSeamlessRunClip(rawClip: THREE.AnimationClip): THREE.AnimationClip {
   const clip = rawClip.clone();
-  let lastActiveTime = 0;
+  const sampleStep = 1 / 30;
+  const totalDur = clip.duration;
+  const numBins = Math.max(4, Math.ceil(totalDur / sampleStep));
+  const binEnergy = new Float32Array(numBins);
 
   for (const track of clip.tracks) {
     const times = track.times;
@@ -103,7 +106,7 @@ function prepareSeamlessRunClip(rawClip: THREE.AnimationClip): THREE.AnimationCl
     const stride = track.getValueSize();
     if (!times || times.length < 2 || stride <= 0) continue;
 
-    // Tahan pergerakan maju/samping (X & Z) pada root/hips agar tidak teleport balik saat loop
+    // Kunci posisi horizontal root/hips (in-place) agar karakter tidak teleport mundur saat loop
     if (/\.position$/i.test(track.name) && /(root|hips|pelvis|armature)/i.test(track.name)) {
       const baseX = values[0];
       const baseZ = values[2];
@@ -111,40 +114,83 @@ function prepareSeamlessRunClip(rawClip: THREE.AnimationClip): THREE.AnimationCl
         values[i * stride] = baseX;
         values[i * stride + 2] = baseZ;
       }
+      continue;
     }
 
-    let lastIdx = times.length - 1;
-    while (lastIdx > 0) {
-      let diff = 0;
+    // Hitung energi gerak (kecepatan perubahan rotasi/skala) di setiap irisan waktu 1/30 detik
+    for (let i = 1; i < times.length; i += 1) {
+      const dt = Math.max(1e-4, times[i] - times[i - 1]);
+      let delta = 0;
       for (let k = 0; k < stride; k += 1) {
-        diff += Math.abs(values[lastIdx * stride + k] - values[(lastIdx - 1) * stride + k]);
+        delta += Math.abs(values[i * stride + k] - values[(i - 1) * stride + k]);
       }
-      if (diff > 1e-4) break;
-      lastIdx -= 1;
-    }
-    if (times[lastIdx] > lastActiveTime) {
-      lastActiveTime = times[lastIdx];
+      const rate = delta / dt;
+      if (rate > 0.08) {
+        const bStart = Math.max(0, Math.floor(times[i - 1] / sampleStep));
+        const bEnd = Math.min(numBins - 1, Math.floor(times[i] / sampleStep));
+        for (let b = bStart; b <= bEnd; b += 1) {
+          binEnergy[b] += rate;
+        }
+      }
     }
   }
 
-  if (lastActiveTime >= 0.25 && lastActiveTime < clip.duration - 0.03) {
+  let peakEnergy = 0;
+  for (let b = 0; b < numBins; b += 1) {
+    if (binEnergy[b] > peakEnergy) peakEnergy = binEnergy[b];
+  }
+
+  // Ambil hanya blok gerakan aktif pertama (sebelum masuk fase patung/freeze)
+  const activeThreshold = Math.max(0.25, peakEnergy * 0.14);
+  let firstActiveBin = 0;
+  while (firstActiveBin < numBins && binEnergy[firstActiveBin] < activeThreshold) {
+    firstActiveBin += 1;
+  }
+
+  let endActiveBin = firstActiveBin;
+  let silentStreak = 0;
+  for (let b = firstActiveBin; b < numBins; b += 1) {
+    if (binEnergy[b] >= activeThreshold) {
+      endActiveBin = b;
+      silentStreak = 0;
+    } else {
+      silentStreak += 1;
+      // Jika sudah diam > 0.16 detik (5 bin), potong sebelum fase freeze dimulai
+      if (silentStreak >= 5 && (endActiveBin - firstActiveBin) * sampleStep >= 0.35) {
+        break;
+      }
+    }
+  }
+
+  const trimStart = firstActiveBin * sampleStep;
+  const trimEnd = Math.min(totalDur, (endActiveBin + 1) * sampleStep);
+  const trimmedDur = trimEnd - trimStart;
+
+  if (trimmedDur >= 0.35 && (trimStart > 0.03 || trimEnd < totalDur - 0.05)) {
     for (const track of clip.tracks) {
       const times = track.times;
       const values = track.values;
       const stride = track.getValueSize();
       if (!times || times.length < 2 || stride <= 0) continue;
 
-      let keepCount = 0;
-      while (keepCount < times.length && times[keepCount] <= lastActiveTime + 1e-4) {
-        keepCount += 1;
+      const newTimes: number[] = [];
+      const newValues: number[] = [];
+      for (let i = 0; i < times.length; i += 1) {
+        if (times[i] >= trimStart - 1e-4 && times[i] <= trimEnd + 1e-4) {
+          newTimes.push(Math.max(0, times[i] - trimStart));
+          for (let k = 0; k < stride; k += 1) {
+            newValues.push(values[i * stride + k]);
+          }
+        }
       }
-      if (keepCount >= 2 && keepCount < times.length) {
-        track.times = times.slice(0, keepCount);
-        track.values = values.slice(0, keepCount * stride);
+      if (newTimes.length >= 2) {
+        track.times = new Float32Array(newTimes);
+        track.values = new Float32Array(newValues);
       }
     }
-    clip.duration = lastActiveTime;
+    clip.duration = trimmedDur;
   }
+
   return clip;
 }
 
