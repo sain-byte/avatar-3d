@@ -142,11 +142,11 @@ class WebGLErrorBoundary extends Component<
 > {
   constructor(props: { children: React.ReactNode; onErrorFallback?: React.ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, errorMsg: "" };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(err: unknown) {
+    return { hasError: true, errorMsg: err instanceof Error ? err.message : String(err) };
   }
 
   render() {
@@ -154,7 +154,7 @@ class WebGLErrorBoundary extends Component<
       return (
         this.props.onErrorFallback ?? (
           <div className="w-full h-full flex items-center justify-center bg-slate-950 text-slate-300 text-xs p-6 text-center">
-            WebGL 3D belum tersedia di perangkat ini.
+            WebGL 3D belum tersedia / Error: {(this.state as any).errorMsg || "Periksa dukungan WebGL"}
           </div>
         )
       );
@@ -533,7 +533,7 @@ const SceneContent: React.FC<
       </group>
 
       {runner.characterStyle === 'custom-glb' && runner.customModelUrl ? (
-        <CustomGlbRunner3D
+        <CanvasErrorBoundary key={runner.customModelUrl || "no-glb"} onErrorFallback={<RealisticRunner3D config={runner} telemetry={telemetry} isPlaying={isPlaying} />}><CustomGlbRunner3D
           config={effectiveRunnerConfig}
           position={runnerPos}
           yawRef={smoothYawRef}
@@ -547,7 +547,7 @@ const SceneContent: React.FC<
           isManualFinishCamera={mapConfig.cameraMode === 'finish-pose'}
           timelineProgress={timelineProgress}
           onStatusChange={onCustomModelStatus}
-        />
+        /></CanvasErrorBoundary>
       ) : (
         <RealisticRunner3D
           config={effectiveRunnerConfig}
