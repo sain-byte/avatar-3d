@@ -353,12 +353,12 @@ const SceneContent: React.FC<
     } else if (effectiveMode === 'follow-20m') {
       const baseAngle =
         mapConfig.camera20mAngle === 'front'
-          ? runnerYaw
+          ? smoothYawRef.current
           : mapConfig.camera20mAngle === 'side'
-            ? runnerYaw + Math.PI * 0.5
+            ? smoothYawRef.current + Math.PI * 0.5
             : mapConfig.camera20mAngle === 'orbit'
-              ? runnerYaw + Math.PI + timelineProgress * Math.PI * 4 + state.clock.elapsedTime * 0.45
-              : runnerYaw + Math.PI;
+              ? smoothYawRef.current + Math.PI + timelineProgress * Math.PI * 4 + state.clock.elapsedTime * 0.45
+              : smoothYawRef.current + Math.PI;
       const horizDist = Math.max(28, visualHeight * 3.4) * zoom;
       const aerialHeight = Math.max(22, visualHeight * 2.8) * zoom;
       const camX = runnerPos.x + Math.sin(baseAngle) * horizDist;
@@ -368,7 +368,7 @@ const SceneContent: React.FC<
     } else if (effectiveMode === 'finish-pose') {
       const finishZoom = THREE.MathUtils.clamp(zoom, 0.75, 1.55);
       const orbitOffset = Math.sin(state.clock.elapsedTime * 0.55) * 0.14;
-      const frontAngle = runnerYaw + 0.22 + orbitOffset;
+      const frontAngle = smoothYawRef.current + 0.22 + orbitOffset;
       const heroDist = runnerScale * 5.2 * finishZoom;
       const heroHeight = runnerScale * 1.32 * finishZoom;
       camTargetPosRef.current.set(
