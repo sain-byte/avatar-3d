@@ -697,6 +697,27 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                     3D OFF
                   </button>
                 </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <label className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(mapConfig.showKmPins)}
+                      onChange={(e) => onChangeMapConfig((prev) => ({ ...prev, showKmPins: e.target.checked }))}
+                      className="rounded border-slate-300 text-orange-500 focus:ring-orange-500"
+                    />
+                    <span>Pin KM & Start</span>
+                  </label>
+                  <label className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(mapConfig.showRouteGlow)}
+                      onChange={(e) => onChangeMapConfig((prev) => ({ ...prev, showRouteGlow: e.target.checked }))}
+                      className="rounded border-slate-300 text-orange-500 focus:ring-orange-500"
+                    />
+                    <span>Efek Glow Rute</span>
+                  </label>
+                </div>
               </div>
 
               <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-slate-800">

@@ -77,6 +77,8 @@ export interface MapConfig {
   overlayColor?: string;
   overlayTextColor?: string;
   overlayBox?: boolean;
+  showKmPins?: boolean;
+  showRouteGlow?: boolean;
 }
 
 export type DurationPresetSec = 15 | 30 | 45 | 60 | 'custom';
@@ -174,6 +176,8 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   overlayColor: '#F97316',
   overlayTextColor: 'auto',
   overlayBox: true,
+  showKmPins: false,
+  showRouteGlow: false,
 };
 
 export const DEFAULT_EXPORT_CONFIG: ExportConfig = {

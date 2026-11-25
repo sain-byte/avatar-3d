@@ -492,6 +492,8 @@ const SceneContent: React.FC<
         routeStyle={mapConfig.routeStyle ?? 'google-maps'}
         overlayColor={mapConfig.overlayColor ?? '#F97316'}
         buildings3d={mapConfig.buildings3d}
+        showKmPins={mapConfig.showKmPins ?? false}
+        showRouteGlow={mapConfig.showRouteGlow ?? false}
         isNight={isNightMood}
         jerseyColor={runner.jerseyColor}
         routeProgress={routeProgress}

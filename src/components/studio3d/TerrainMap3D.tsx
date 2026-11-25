@@ -55,6 +55,8 @@ interface TerrainMap3DProps {
   routeStyle?: RouteVisualStyle3D;
   overlayColor?: string;
   buildings3d: boolean;
+  showKmPins?: boolean;
+  showRouteGlow?: boolean;
   isNight: boolean;
   jerseyColor: string;
   routeProgress: number;
@@ -190,6 +192,7 @@ function syncHairlineRouteOnMap(
   routeProgress: number,
   accentColor: string,
   darkTheme: boolean,
+  showRouteGlow = false,
 ) {
   if (!map.isStyleLoaded() || track.points.length < 2) return;
 
@@ -217,6 +220,7 @@ function syncHairlineRouteOnMap(
   if (fullSrc) {
     fullSrc.setData(fullGeo);
     map.setPaintProperty('gpx-route-base', 'line-color', baseColor);
+    map.setPaintProperty('gpx-route-base', 'line-dasharray', showRouteGlow ? [2, 2] : [1, 0]);
   } else {
     map.addSource('gpx-route-full', { type: 'geojson', data: fullGeo });
     map.addLayer({
@@ -238,6 +242,7 @@ function syncHairlineRouteOnMap(
     activeSrc.setData(activeGeo);
     if (map.getLayer('gpx-route-glow')) {
       map.setPaintProperty('gpx-route-glow', 'line-color', accentColor);
+      map.setPaintProperty('gpx-route-glow', 'line-opacity', showRouteGlow ? 0.36 : 0);
     }
     map.setPaintProperty('gpx-route-active', 'line-color', accentColor);
   } else {
@@ -251,7 +256,7 @@ function syncHairlineRouteOnMap(
         'line-color': accentColor,
         'line-width': 9.5,
         'line-blur': 4.5,
-        'line-opacity': 0.36,
+        'line-opacity': showRouteGlow ? 0.36 : 0,
       },
     });
     map.addLayer({
@@ -273,6 +278,8 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
   mapStyle,
   overlayColor = '#F97316',
   buildings3d,
+  showKmPins = false,
+  showRouteGlow = false,
   isNight,
   routeProgress,
   groundedPath,
@@ -328,6 +335,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
         routeProgress,
         overlayColor,
         isDarkMapTheme(currentModeRef.current),
+        showRouteGlow,
       );
       onMapLoadStatus?.({
         phase: 'ready',
@@ -382,7 +390,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     map.setStyle(MAP_STYLES[mapStyle]);
     map.once('style.load', () => {
       add3DBuildingsToMap(map, mapStyle, buildings3dRef.current);
-      syncHairlineRouteOnMap(map, track, routeProgress, overlayColor, isDarkMapTheme(mapStyle));
+      syncHairlineRouteOnMap(map, track, routeProgress, overlayColor, isDarkMapTheme(mapStyle), showRouteGlow);
       onMapLoadStatus?.({
         phase: 'ready',
         loadedTiles: 1,
@@ -408,7 +416,8 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
       routeProgress,
       overlayColor,
       isDarkMapTheme(currentModeRef.current),
-    );
+        showRouteGlow,
+      );
 
     const fwd = forwardVecRef.current;
     camera.getWorldDirection(fwd);
@@ -475,7 +484,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
         <shadowMaterial transparent opacity={isNight ? 0.36 : 0.25} />
       </mesh>
 
-      {landmarkMarkers.map((item) => (
+      {showKmPins && landmarkMarkers.map((item) => (
         <LandmarkMarker3D
           key={item.landmark.id}
           landmark={item.landmark}
