@@ -938,61 +938,31 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                 </div>
 
                 <div
-                  className="pointer-events-none absolute top-0 inset-x-0 pt-7 pb-6 px-3.5 pr-[88px] z-10"
+                  className="pointer-events-none absolute top-0 inset-x-0 pt-6 pb-5 px-3 pr-[76px] z-10"
                   style={{
                     background:
-                      'linear-gradient(180deg, rgba(2,6,23,0.86) 0%, rgba(2,6,23,0.42) 70%, rgba(2,6,23,0) 100%)',
+                      'linear-gradient(180deg, rgba(2,6,23,0.84) 0%, rgba(2,6,23,0.38) 70%, rgba(2,6,23,0) 100%)',
                   }}
                 >
                   <div className="min-w-0 space-y-0.5">
-                    <p className="font-mono-tabular text-[10px] font-extrabold tracking-wider text-emerald-400 uppercase truncate">
+                    <p className="font-mono-tabular text-[9px] font-extrabold tracking-wider text-emerald-400 uppercase truncate">
                       {runner.runnerName || 'Pelari'}
                     </p>
-                    <p className="font-display text-sm font-bold text-white truncate">
+                    <p className="font-display text-xs font-bold text-white truncate">
                       {activeTrack.title}
                     </p>
-                    <p className="font-mono-tabular text-[10px] font-medium text-slate-200/90 truncate">
+                    <p className="font-mono-tabular text-[9px] font-medium text-slate-200/85 truncate">
                       {activeTrack.date} · {activeTrack.location}
                     </p>
                   </div>
                 </div>
 
-                {visibleKmSplits.length > 0 && (
-                  <div
-                    data-testid="studio3d-km-splits"
-                    className="pointer-events-none absolute top-[84px] left-3.5 z-10 flex flex-col gap-1"
-                  >
-                    {visibleKmSplits.map((sp, idx) => {
-                      const isNewest = idx === visibleKmSplits.length - 1;
-                      return (
-                        <div
-                          key={sp.index}
-                          className={`rounded-lg bg-slate-950/88 px-2.5 py-1 border font-mono-tabular text-[10px] font-bold flex items-center gap-1.5 shadow-md transition-all ${
-                            isNewest
-                              ? 'border-emerald-400/70 text-white opacity-95'
-                              : idx === 0 && visibleKmSplits.length === 3
-                                ? 'border-white/15 text-slate-300 opacity-65'
-                                : 'border-white/20 text-slate-100 opacity-85'
-                          }`}
-                        >
-                          <span className={isNewest ? 'text-emerald-400 font-extrabold' : 'text-sky-300'}>
-                            {sp.label} :
-                          </span>
-                          <span>
-                            {formatPace(sp.avgPaceSecPerKm)}/km · {sp.avgHr} bpm
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
                 {miniMap && (
                   <div
                     data-testid="studio3d-gps-minimap"
-                    className="pointer-events-none absolute top-6 right-3 z-15 w-16 h-16 rounded-xl bg-slate-950/88 border border-white/20 shadow-lg overflow-hidden"
+                    className="pointer-events-none absolute top-5 right-2.5 z-15 w-14 h-14 rounded-xl bg-slate-950/88 border border-white/20 shadow-lg overflow-hidden"
                   >
-                    <span className="absolute top-1 left-1.5 font-mono-tabular text-[8px] font-bold text-slate-400 leading-none">
+                    <span className="absolute top-1 left-1.5 font-mono-tabular text-[7px] font-bold text-slate-400 leading-none">
                       GPS
                     </span>
                     <svg
@@ -1026,140 +996,229 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   </div>
                 )}
 
+                {visibleKmSplits.length > 0 && bannerState.finishAlpha <= 0.15 && (
+                  <div
+                    data-testid="studio3d-km-splits"
+                    className="pointer-events-none absolute top-[72px] left-3 z-10 flex flex-col gap-1"
+                  >
+                    {visibleKmSplits.map((sp, idx) => {
+                      const isNewest = idx === visibleKmSplits.length - 1;
+                      return (
+                        <div
+                          key={sp.index}
+                          className={`rounded-md bg-slate-950/85 px-2 py-0.5 border font-mono-tabular text-[9px] font-bold flex items-center gap-1 shadow-sm transition-all ${
+                            isNewest
+                              ? 'border-emerald-400/65 text-white opacity-95'
+                              : idx === 0 && visibleKmSplits.length === 3
+                                ? 'border-white/15 text-slate-300 opacity-65'
+                                : 'border-white/15 text-slate-100 opacity-82'
+                          }`}
+                        >
+                          <span className={isNewest ? 'text-emerald-400 font-extrabold' : 'text-sky-300'}>
+                            {sp.label} :
+                          </span>
+                          <span>
+                            {formatPace(sp.avgPaceSecPerKm)}/km · {sp.avgHr} bpm
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {bannerState.startAlpha > 0.02 && (
                   <div
                     data-testid="studio3d-start-banner"
-                    className="pointer-events-none absolute top-[96px] inset-x-3.5 z-10 rounded-xl bg-slate-950/90 border border-emerald-500/65 px-3 py-2 flex items-center gap-2.5 shadow-lg"
+                    className="pointer-events-none absolute top-[84px] inset-x-3 z-10 rounded-xl bg-slate-950/90 border border-emerald-500/65 px-2.5 py-1.5 flex items-center gap-2 shadow-lg"
                     style={{
                       opacity: bannerState.startAlpha,
                       transform: `translateY(${(bannerState.startOffsetY * 0.5).toFixed(1)}px)`,
                     }}
                   >
-                    <span className="px-2.5 py-1.5 rounded-lg bg-emerald-500 text-white font-mono-tabular text-[11px] font-extrabold tracking-wider shrink-0">
+                    <span className="px-2 py-1 rounded-md bg-emerald-500 text-white font-mono-tabular text-[9px] font-extrabold tracking-wider shrink-0">
                       START
                     </span>
                     <div className="min-w-0">
-                      <p className="font-display text-xs font-bold text-white truncate">
+                      <p className="font-display text-[11px] font-bold text-white truncate">
                         {activeTrack.totalDistanceKm.toFixed(2)} KM · {activeTrack.location}
                       </p>
-                      <p className="font-mono-tabular text-[10px] font-semibold text-emerald-200 truncate">
+                      <p className="font-mono-tabular text-[9px] font-semibold text-emerald-200 truncate">
                         {runner.runnerName || 'Pelari'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {bannerState.finishAlpha > 0.02 && (
-                  <div
-                    data-testid="studio3d-finish-banner"
-                    className="pointer-events-none absolute top-[172px] inset-x-3.5 z-10 rounded-2xl bg-slate-950/92 border border-orange-500/75 px-3 py-2.5 flex items-center gap-2.5 shadow-xl"
-                    style={{
-                      opacity: bannerState.finishAlpha,
-                      transform: `translateY(${(bannerState.finishOffsetY * 0.5).toFixed(1)}px)`,
-                    }}
-                  >
-                    <span className="px-2.5 py-1.5 rounded-lg bg-orange-500 text-white font-mono-tabular text-[11px] font-extrabold tracking-wider shrink-0">
-                      FINISH
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-display text-xs font-bold text-white truncate">
-                        {runner.runnerName || 'Pelari'}
-                      </p>
-                      <p className="font-mono-tabular text-[10px] font-bold text-amber-200 truncate">
-                        {activeTrack.totalDistanceKm.toFixed(2)} km · {formatDuration(activeTrack.totalDurationSec)} ·{' '}
-                        {formatPace(activeTrack.avgPaceSecPerKm)}/km
                       </p>
                     </div>
                   </div>
                 )}
 
                 <div
-                  className="pointer-events-none absolute bottom-0 inset-x-0 pt-10 pb-3.5 px-3 z-10"
+                  className="pointer-events-none absolute bottom-0 inset-x-0 pt-8 pb-3 px-2.5 z-10"
                   style={{
                     background:
-                      'linear-gradient(0deg, rgba(2,6,23,0.92) 0%, rgba(2,6,23,0.52) 72%, rgba(2,6,23,0) 100%)',
+                      'linear-gradient(0deg, rgba(2,6,23,0.90) 0%, rgba(2,6,23,0.48) 72%, rgba(2,6,23,0) 100%)',
                   }}
                 >
-                  <div className="rounded-2xl bg-slate-950/88 border border-white/15 px-3.5 py-3 space-y-2.5">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <div className="min-w-0 truncate">
-                        <span className="font-mono-tabular text-lg font-extrabold text-white">
-                          {liveTelemetry.distanceKm.toFixed(2)}
-                        </span>
-                        <span className="font-mono-tabular text-[10px] font-bold text-emerald-400 ml-1">
-                          / {activeTrack.totalDistanceKm.toFixed(2)} KM
-                        </span>
+                  {bannerState.finishAlpha > 0.15 ? (
+                    <div
+                      data-testid="studio3d-finish-banner"
+                      className="rounded-2xl bg-slate-950/92 border border-[#FC4C02]/75 px-3 py-2.5 space-y-2 shadow-xl transition-all"
+                      style={{
+                        opacity: bannerState.finishAlpha,
+                        transform: `translateY(${(bannerState.finishOffsetY * 0.4).toFixed(1)}px)`,
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-1 h-7 rounded-full bg-[#FC4C02] shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-mono-tabular text-[8px] font-extrabold tracking-widest text-[#FC4C02] uppercase">
+                            Activity Completed
+                          </p>
+                          <p className="font-display text-xs font-bold text-white truncate">
+                            {runner.runnerName || 'Pelari'} · {activeTrack.title}
+                          </p>
+                        </div>
                       </div>
-                      <span
-                        className={`font-mono-tabular text-[11px] font-bold shrink-0 ${
-                          liveTelemetry.isFinishPhase ? 'text-emerald-400' : 'text-slate-100'
-                        }`}
-                      >
-                        {liveTelemetry.isFinishPhase
-                          ? `FINISH · ${formatDuration(liveTelemetry.elapsedSec)}`
-                          : formatDuration(liveTelemetry.elapsedSec)}
-                      </span>
-                    </div>
 
-                    <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-[width] duration-75"
-                        style={{
-                          width: `${Math.max(2, Math.min(100, progress * 100))}%`,
-                          backgroundColor: runner.jerseyColor,
-                        }}
-                      />
-                    </div>
+                      <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            DISTANCE
+                          </span>
+                          <span className="font-mono-tabular text-xs font-extrabold text-white">
+                            {activeTrack.totalDistanceKm.toFixed(2)} km
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            AVG PACE
+                          </span>
+                          <span className="font-mono-tabular text-xs font-extrabold text-white">
+                            {formatPace(activeTrack.avgPaceSecPerKm)} /km
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            TIME
+                          </span>
+                          <span className="font-mono-tabular text-xs font-extrabold text-white">
+                            {formatDuration(activeTrack.totalDurationSec)}
+                          </span>
+                        </div>
+                      </div>
 
-                    <div className="grid grid-cols-3 gap-x-2 gap-y-1.5">
-                      <div>
-                        <span className="block font-mono-tabular text-[9px] text-slate-400">
-                          PACE (/KM)
-                        </span>
-                        <span className="font-mono-tabular text-xs font-bold text-white">
-                          {formatPace(liveTelemetry.point.paceSecPerKm)} /km
-                        </span>
+                      <div className="grid grid-cols-3 gap-1.5 pt-1.5 border-t border-white/10">
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            AVG HR
+                          </span>
+                          <span className="font-mono-tabular text-[10px] font-bold text-slate-200">
+                            {activeTrack.avgHr} bpm
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            CADENCE
+                          </span>
+                          <span className="font-mono-tabular text-[10px] font-bold text-slate-200">
+                            {activeTrack.avgCadence} spm
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            ELEV GAIN
+                          </span>
+                          <span className="font-mono-tabular text-[10px] font-bold text-slate-200">
+                            +{activeTrack.elevationGainM} m
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="block font-mono-tabular text-[9px] text-slate-400">
-                          HEART RATE
-                        </span>
-                        <span className="font-mono-tabular text-xs font-bold text-white">
-                          {liveTelemetry.point.hr} bpm
-                        </span>
-                      </div>
-                      <div>
-                        <span className="block font-mono-tabular text-[9px] text-slate-400">
-                          CADENCE
-                        </span>
-                        <span className="font-mono-tabular text-xs font-bold text-white">
-                          {liveTelemetry.point.cadence} spm
-                        </span>
-                      </div>
-                      <div>
-                        <span className="block font-mono-tabular text-[9px] text-slate-400">
-                          DISTANCE
-                        </span>
-                        <span className="font-mono-tabular text-xs font-bold text-white">
-                          {liveTelemetry.distanceKm.toFixed(2)} km
-                        </span>
-                      </div>
-                      <div>
-                        <span className="block font-mono-tabular text-[9px] text-slate-400">
-                          ELEV GAIN
-                        </span>
-                        <span className="font-mono-tabular text-xs font-bold text-white">
-                          +{liveTelemetry.elevGainSoFarM} m
-                        </span>
-                      </div>
-                      <div>
-                        <span className="block font-mono-tabular text-[9px] text-slate-400">TIME</span>
-                        <span className="font-mono-tabular text-xs font-bold text-white">
+
+                      {allKmSplits.length > 0 && (
+                        <div className="pt-1 border-t border-white/10 flex flex-wrap gap-x-2 gap-y-0.5 font-mono-tabular text-[8px] font-bold text-emerald-400">
+                          {allKmSplits.slice(0, 6).map((sp) => (
+                            <span key={sp.index}>
+                              {sp.label}:{formatPace(sp.avgPaceSecPerKm)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl bg-slate-950/86 border border-white/15 px-3 py-2 space-y-1.5">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <div className="min-w-0 truncate">
+                          <span className="font-mono-tabular text-sm font-extrabold text-white">
+                            {liveTelemetry.distanceKm.toFixed(2)}
+                          </span>
+                          <span className="font-mono-tabular text-[9px] font-bold text-emerald-400 ml-1">
+                            / {activeTrack.totalDistanceKm.toFixed(2)} KM
+                          </span>
+                        </div>
+                        <span className="font-mono-tabular text-[10px] font-bold text-slate-100 shrink-0">
                           {formatDuration(liveTelemetry.elapsedSec)}
                         </span>
                       </div>
+
+                      <div className="w-full h-1 rounded-full bg-white/15 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-[width] duration-75"
+                          style={{
+                            width: `${Math.max(2, Math.min(100, progress * 100))}%`,
+                            backgroundColor: runner.jerseyColor,
+                          }}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-x-1.5 gap-y-1">
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            PACE (/KM)
+                          </span>
+                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                            {formatPace(liveTelemetry.point.paceSecPerKm)} /km
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            HEART RATE
+                          </span>
+                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                            {liveTelemetry.point.hr} bpm
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            CADENCE
+                          </span>
+                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                            {liveTelemetry.point.cadence} spm
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            DISTANCE
+                          </span>
+                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                            {liveTelemetry.distanceKm.toFixed(2)} km
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            ELEV GAIN
+                          </span>
+                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                            +{liveTelemetry.elevGainSoFarM} m
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-mono-tabular text-[8px] text-slate-400">
+                            TIME
+                          </span>
+                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                            {formatDuration(liveTelemetry.elapsedSec)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </>
             )}

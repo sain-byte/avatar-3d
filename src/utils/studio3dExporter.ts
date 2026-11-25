@@ -286,57 +286,57 @@ function paintBroadcastHudOverlay(params: {
   const finishThreshold = includeFinishPose ? 0.88 : 1.0;
   const routeProgress = Math.min(1, Math.max(0, progress / finishThreshold));
 
-  const topGrad = ctx.createLinearGradient(0, 0, 0, 220 * s);
+  const topGrad = ctx.createLinearGradient(0, 0, 0, 185 * s);
   topGrad.addColorStop(0, 'rgba(2, 6, 23, 0.84)');
-  topGrad.addColorStop(0.65, 'rgba(2, 6, 23, 0.42)');
+  topGrad.addColorStop(0.65, 'rgba(2, 6, 23, 0.38)');
   topGrad.addColorStop(1, 'rgba(2, 6, 23, 0)');
   ctx.fillStyle = topGrad;
-  ctx.fillRect(0, 0, width, 220 * s);
+  ctx.fillRect(0, 0, width, 185 * s);
 
-  const botGrad = ctx.createLinearGradient(0, height - 350 * s, 0, height);
+  const botGrad = ctx.createLinearGradient(0, height - 300 * s, 0, height);
   botGrad.addColorStop(0, 'rgba(2, 6, 23, 0)');
-  botGrad.addColorStop(0.35, 'rgba(2, 6, 23, 0.56)');
+  botGrad.addColorStop(0.35, 'rgba(2, 6, 23, 0.52)');
   botGrad.addColorStop(1, 'rgba(2, 6, 23, 0.90)');
   ctx.fillStyle = botGrad;
-  ctx.fillRect(0, height - 350 * s, width, 350 * s);
+  ctx.fillRect(0, height - 300 * s, width, 300 * s);
 
-  const padX = 36 * s;
+  const padX = 32 * s;
   const runnerLabel = (runner.runnerName || 'Pelari').trim().toUpperCase().slice(0, 24);
 
-  // Header Kiri Atas: Baris 1 Nama Pelari, Baris 2 Nama Aktivitas GPX, Baris 3 Tanggal + Kota/Kabupaten
+  // Header Kiri Atas (Compact)
   ctx.textAlign = 'left';
   ctx.fillStyle = 'rgba(52, 211, 153, 0.96)';
-  ctx.font = `800 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
-  ctx.fillText(runnerLabel, padX, 46 * s);
+  ctx.font = `800 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
+  ctx.fillText(runnerLabel, padX, 40 * s);
 
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = `700 ${Math.round(25 * s)}px Outfit, sans-serif`;
-  ctx.fillText(track.title.slice(0, 26), padX, 78 * s);
+  ctx.font = `700 ${Math.round(21 * s)}px Outfit, sans-serif`;
+  ctx.fillText(track.title.slice(0, 26), padX, 66 * s);
 
-  ctx.fillStyle = 'rgba(226, 232, 240, 0.88)';
-  ctx.font = `600 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
+  ctx.fillStyle = 'rgba(226, 232, 240, 0.86)';
+  ctx.font = `600 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
   ctx.fillText(
     `${track.date} · ${track.location.slice(0, 26)}`,
     padX,
-    104 * s,
+    88 * s,
   );
 
-  // Mini GPS Radar Kanan Atas
-  const mmSize = 114 * s;
+  // Mini GPS Radar Kanan Atas (Compact)
+  const mmSize = 96 * s;
   const mmX = width - padX - mmSize;
-  const mmY = 30 * s;
-  drawRoundedRect(ctx, mmX, mmY, mmSize, mmSize, 16 * s);
+  const mmY = 28 * s;
+  drawRoundedRect(ctx, mmX, mmY, mmSize, mmSize, 14 * s);
   ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.20)';
-  ctx.lineWidth = Math.max(1, 1.5 * s);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+  ctx.lineWidth = Math.max(1, 1.3 * s);
   ctx.stroke();
 
   ctx.fillStyle = 'rgba(148, 163, 184, 0.92)';
-  ctx.font = `700 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
-  ctx.fillText('GPS', mmX + 10 * s, mmY + 18 * s);
+  ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
+  ctx.fillText('GPS', mmX + 9 * s, mmY + 15 * s);
 
-  const mmGeom = computeMiniMapGeometry(track, routeProgress, mmSize, 18 * s);
+  const mmGeom = computeMiniMapGeometry(track, routeProgress, mmSize, 15 * s);
   if (mmGeom.polyline.length >= 2) {
     ctx.save();
     ctx.beginPath();
@@ -345,59 +345,59 @@ function paintBroadcastHudOverlay(params: {
       ctx.lineTo(mmX + mmGeom.polyline[i].x, mmY + mmGeom.polyline[i].y);
     }
     ctx.strokeStyle = '#38BDF8';
-    ctx.lineWidth = Math.max(2, 3.2 * s);
+    ctx.lineWidth = Math.max(1.8, 2.8 * s);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(mmX + mmGeom.startPt.x, mmY + mmGeom.startPt.y, 4 * s, 0, Math.PI * 2);
+    ctx.arc(mmX + mmGeom.startPt.x, mmY + mmGeom.startPt.y, 3.5 * s, 0, Math.PI * 2);
     ctx.fillStyle = '#10B981';
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(mmX + mmGeom.runnerPt.x, mmY + mmGeom.runnerPt.y, 5.5 * s, 0, Math.PI * 2);
+    ctx.arc(mmX + mmGeom.runnerPt.x, mmY + mmGeom.runnerPt.y, 4.8 * s, 0, Math.PI * 2);
     ctx.fillStyle = '#FFFFFF';
     ctx.fill();
     ctx.strokeStyle = '#0284C7';
-    ctx.lineWidth = Math.max(1.5, 2.2 * s);
+    ctx.lineWidth = Math.max(1.2, 2 * s);
     ctx.stroke();
     ctx.restore();
   }
 
-  // Km Splits Ticker (Rolling 3 baris terbaru) di bawah header kiri atas
+  // Km Splits Ticker (Compact)
   const visibleSplits = getCompletedKmSplits(
     allSplits,
     telemetry.distanceKm,
     telemetry.isFinishPhase,
   );
-  if (visibleSplits.length > 0) {
-    const pillW = 308 * s;
-    const pillH = 38 * s;
-    const startSplitY = 126 * s;
+  if (visibleSplits.length > 0 && !telemetry.isFinishPhase) {
+    const pillW = 248 * s;
+    const pillH = 30 * s;
+    const startSplitY = 106 * s;
 
     visibleSplits.forEach((sp, idx) => {
-      const sy = startSplitY + idx * (pillH + 7 * s);
+      const sy = startSplitY + idx * (pillH + 5 * s);
       const isNewest = idx === visibleSplits.length - 1;
       ctx.save();
-      ctx.globalAlpha = isNewest ? 0.96 : idx === 0 && visibleSplits.length === 3 ? 0.68 : 0.84;
-      drawRoundedRect(ctx, padX, sy, pillW, pillH, 10 * s);
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.globalAlpha = isNewest ? 0.95 : idx === 0 && visibleSplits.length === 3 ? 0.65 : 0.82;
+      drawRoundedRect(ctx, padX, sy, pillW, pillH, 8 * s);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
       ctx.fill();
-      ctx.strokeStyle = isNewest ? 'rgba(52, 211, 153, 0.7)' : 'rgba(255, 255, 255, 0.16)';
-      ctx.lineWidth = Math.max(1, 1.3 * s);
+      ctx.strokeStyle = isNewest ? 'rgba(52, 211, 153, 0.65)' : 'rgba(255, 255, 255, 0.14)';
+      ctx.lineWidth = Math.max(1, 1.1 * s);
       ctx.stroke();
 
       ctx.fillStyle = isNewest ? '#34D399' : '#93C5FD';
-      ctx.font = `800 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
-      ctx.fillText(`${sp.label} :`, padX + 12 * s, sy + 24 * s);
+      ctx.font = `800 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
+      ctx.fillText(`${sp.label} :`, padX + 10 * s, sy + 19 * s);
 
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = `700 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
+      ctx.font = `700 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
       ctx.fillText(
         `${formatPace(sp.avgPaceSecPerKm)}/km · ${sp.avgHr} bpm`,
-        padX + 68 * s,
-        sy + 24 * s,
+        padX + 56 * s,
+        sy + 19 * s,
       );
       ctx.restore();
     });
@@ -410,154 +410,193 @@ function paintBroadcastHudOverlay(params: {
     ctx.globalAlpha = banner.startAlpha;
     const bx = padX;
     const bw = width - padX * 2;
-    const bh = 88 * s;
-    const by = (162 + banner.startOffsetY) * s;
+    const bh = 68 * s;
+    const by = (138 + banner.startOffsetY) * s;
 
-    drawRoundedRect(ctx, bx, by, bw, bh, 18 * s);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+    drawRoundedRect(ctx, bx, by, bw, bh, 14 * s);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(16, 185, 129, 0.65)';
-    ctx.lineWidth = Math.max(1.5, 2 * s);
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
+    ctx.lineWidth = Math.max(1.2, 1.6 * s);
     ctx.stroke();
 
-    drawRoundedRect(ctx, bx + 18 * s, by + 20 * s, 96 * s, 48 * s, 12 * s);
+    drawRoundedRect(ctx, bx + 14 * s, by + 15 * s, 78 * s, 38 * s, 10 * s);
     ctx.fillStyle = '#10B981';
     ctx.fill();
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `800 ${Math.round(19 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText('START', bx + (18 + 48) * s, by + 51 * s);
+    ctx.font = `800 ${Math.round(15 * s)}px JetBrains Mono, monospace`;
+    ctx.fillText('START', bx + (14 + 39) * s, by + 39 * s);
 
     ctx.textAlign = 'left';
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `700 ${Math.round(21 * s)}px Outfit, sans-serif`;
+    ctx.font = `700 ${Math.round(17 * s)}px Outfit, sans-serif`;
     ctx.fillText(
-      `${track.totalDistanceKm.toFixed(2)} KM · ${track.location.slice(0, 22)}`,
-      bx + 132 * s,
-      by + 42 * s,
+      `${track.totalDistanceKm.toFixed(2)} KM · ${track.location.slice(0, 24)}`,
+      bx + 106 * s,
+      by + 33 * s,
     );
     ctx.fillStyle = '#A7F3D0';
-    ctx.font = `600 ${Math.round(14 * s)}px JetBrains Mono, monospace`;
+    ctx.font = `600 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
     ctx.fillText(
       (runner.runnerName || 'Pelari').slice(0, 26),
-      bx + 132 * s,
-      by + 66 * s,
+      bx + 106 * s,
+      by + 53 * s,
     );
     ctx.restore();
   }
 
-  if (banner.finishAlpha > 0.02) {
-    ctx.save();
-    ctx.globalAlpha = banner.finishAlpha;
-    const bx = padX;
-    const bw = width - padX * 2;
-    const bh = 104 * s;
-    const by = (280 + banner.finishOffsetY) * s;
+  // Kartu Telemetri Bawah / Kartu Summary Ala Strava saat Finish
+  const cardX = padX;
+  const cardW = width - padX * 2;
 
-    drawRoundedRect(ctx, bx, by, bw, bh, 20 * s);
+  if (banner.finishAlpha > 0.15) {
+    // Strava-Style Activity Summary Card di bagian bawah
+    const cardH = 264 * s;
+    const cardY = height - cardH - 28 * s;
+
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 20 * s);
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(249, 115, 22, 0.78)';
+    ctx.strokeStyle = 'rgba(252, 76, 2, 0.72)';
     ctx.lineWidth = Math.max(1.5, 2 * s);
     ctx.stroke();
 
-    drawRoundedRect(ctx, bx + 18 * s, by + 26 * s, 108 * s, 52 * s, 12 * s);
-    ctx.fillStyle = '#F97316';
+    // Accent bar oranye Strava di sisi kiri kartu
+    drawRoundedRect(ctx, cardX + 14 * s, cardY + 18 * s, 6 * s, 44 * s, 3 * s);
+    ctx.fillStyle = '#FC4C02';
     ctx.fill();
 
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `800 ${Math.round(20 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText('FINISH', bx + (18 + 54) * s, by + 59 * s);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#FC4C02';
+    ctx.font = `800 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
+    ctx.fillText('ACTIVITY COMPLETED', cardX + 30 * s, cardY + 32 * s);
 
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `700 ${Math.round(19 * s)}px Outfit, sans-serif`;
+    ctx.fillText(
+      `${(runner.runnerName || 'Pelari').slice(0, 20)} · ${track.title.slice(0, 18)}`,
+      cardX + 30 * s,
+      cardY + 56 * s,
+    );
+
+    // 3 Metric Utama Strava Style (Distance | Pace | Time)
+    const stravaMetrics = [
+      { label: 'DISTANCE', value: `${track.totalDistanceKm.toFixed(2)} km` },
+      { label: 'AVG PACE', value: `${formatPace(track.avgPaceSecPerKm)} /km` },
+      { label: 'TIME', value: formatDuration(track.totalDurationSec) },
+    ];
+    const colW = (cardW - 44 * s) / 3;
+    stravaMetrics.forEach((m, idx) => {
+      const mx = cardX + 22 * s + idx * colW;
+      const my = cardY + 96 * s;
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
+      ctx.font = `700 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
+      ctx.fillText(m.label, mx, my);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = `800 ${Math.round(23 * s)}px JetBrains Mono, monospace`;
+      ctx.fillText(m.value, mx, my + 27 * s);
+    });
+
+    // Divider halus
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.fillRect(cardX + 22 * s, cardY + 142 * s, cardW - 44 * s, Math.max(1, 1 * s));
+
+    // 3 Metric Tambahan (Avg HR | Cadence | Elev Gain)
+    const subMetrics = [
+      { label: 'AVG HR', value: `${track.avgHr} bpm` },
+      { label: 'CADENCE', value: `${track.avgCadence} spm` },
+      { label: 'ELEV GAIN', value: `+${track.elevationGainM} m` },
+    ];
+    subMetrics.forEach((m, idx) => {
+      const mx = cardX + 22 * s + idx * colW;
+      const my = cardY + 168 * s;
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.85)';
+      ctx.font = `600 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
+      ctx.fillText(m.label, mx, my);
+
+      ctx.fillStyle = '#E2E8F0';
+      ctx.font = `700 ${Math.round(18 * s)}px JetBrains Mono, monospace`;
+      ctx.fillText(m.value, mx, my + 22 * s);
+    });
+
+    // Footer Splits Ringkas di bawah kartu
+    if (allSplits.length > 0) {
+      const splitSummary = allSplits
+        .slice(0, 6)
+        .map((sp) => `${sp.label}:${formatPace(sp.avgPaceSecPerKm)}`)
+        .join('  ');
+      ctx.fillStyle = '#34D399';
+      ctx.font = `700 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
+      ctx.fillText(splitSummary.slice(0, 56), cardX + 22 * s, cardY + 236 * s);
+    }
+  } else {
+    // Live Telemetry Card (Compact)
+    const cardH = 204 * s;
+    const cardY = height - cardH - 28 * s;
+
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 18 * s);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = Math.max(1, 1.3 * s);
+    ctx.stroke();
+
+    const distStr = telemetry.distanceKm.toFixed(2);
     ctx.textAlign = 'left';
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `700 ${Math.round(21 * s)}px Outfit, sans-serif`;
-    ctx.fillText(
-      (runner.runnerName || 'Pelari').slice(0, 26),
-      bx + 142 * s,
-      by + 44 * s,
-    );
-    ctx.fillStyle = '#FDE68A';
-    ctx.font = `700 ${Math.round(16 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText(
-      `${track.totalDistanceKm.toFixed(2)} km · ${formatDuration(track.totalDurationSec)} · ${formatPace(track.avgPaceSecPerKm)}/km`,
-      bx + 142 * s,
-      by + 74 * s,
-    );
-    ctx.restore();
+    ctx.font = `800 ${Math.round(27 * s)}px JetBrains Mono, monospace`;
+    ctx.fillText(distStr, cardX + 20 * s, cardY + 38 * s);
+    const distW = ctx.measureText(distStr).width;
+
+    ctx.fillStyle = '#34D399';
+    ctx.font = `700 ${Math.round(13 * s)}px JetBrains Mono, monospace`;
+    ctx.fillText(` / ${track.totalDistanceKm.toFixed(2)} KM`, cardX + 20 * s + distW, cardY + 37 * s);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#E2E8F0';
+    ctx.font = `700 ${Math.round(15 * s)}px JetBrains Mono, monospace`;
+    ctx.fillText(formatDuration(telemetry.elapsedSec), cardX + cardW - 20 * s, cardY + 37 * s);
+    ctx.textAlign = 'left';
+
+    const barX = cardX + 20 * s;
+    const barW = cardW - 40 * s;
+    const barY = cardY + 50 * s;
+    drawRoundedRect(ctx, barX, barY, barW, 6 * s, 3 * s);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+    ctx.fill();
+
+    drawRoundedRect(ctx, barX, barY, Math.max(12 * s, barW * progress), 6 * s, 3 * s);
+    ctx.fillStyle = runner.jerseyColor;
+    ctx.fill();
+
+    const stats = [
+      { label: 'PACE (/KM)', value: `${formatPace(telemetry.point.paceSecPerKm)} /km` },
+      { label: 'HEART RATE', value: `${telemetry.point.hr} bpm` },
+      { label: 'CADENCE', value: `${telemetry.point.cadence} spm` },
+      { label: 'DISTANCE', value: `${telemetry.distanceKm.toFixed(2)} km` },
+      { label: 'ELEV GAIN', value: `+${telemetry.elevGainSoFarM} m` },
+      { label: 'TIME', value: formatDuration(telemetry.elapsedSec) },
+    ];
+
+    const colW = (cardW - 40 * s) / 3;
+    stats.forEach((st, idx) => {
+      const col = idx % 3;
+      const row = Math.floor(idx / 3);
+      const sx = cardX + 20 * s + col * colW;
+      const sy = cardY + (82 + row * 56) * s;
+
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.90)';
+      ctx.font = `600 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
+      ctx.fillText(st.label, sx, sy);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = `700 ${Math.round(19 * s)}px JetBrains Mono, monospace`;
+      ctx.fillText(st.value, sx, sy + 22 * s);
+    });
   }
-
-  // Kartu Telemetri Bawah
-  const cardX = padX;
-  const cardW = width - padX * 2;
-  const cardH = 248 * s;
-  const cardY = height - cardH - 32 * s;
-
-  drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 22 * s);
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-  ctx.lineWidth = Math.max(1, 1.5 * s);
-  ctx.stroke();
-
-  const distStr = telemetry.distanceKm.toFixed(2);
-  ctx.textAlign = 'left';
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = `800 ${Math.round(34 * s)}px JetBrains Mono, monospace`;
-  ctx.fillText(distStr, cardX + 24 * s, cardY + 46 * s);
-  const distW = ctx.measureText(distStr).width;
-
-  ctx.fillStyle = '#34D399';
-  ctx.font = `700 ${Math.round(16 * s)}px JetBrains Mono, monospace`;
-  ctx.fillText(` / ${track.totalDistanceKm.toFixed(2)} KM`, cardX + 24 * s + distW, cardY + 45 * s);
-
-  ctx.textAlign = 'right';
-  ctx.fillStyle = telemetry.isFinishPhase ? '#34D399' : '#E2E8F0';
-  ctx.font = `700 ${Math.round(18 * s)}px JetBrains Mono, monospace`;
-  ctx.fillText(
-    telemetry.isFinishPhase ? `FINISH · ${formatDuration(telemetry.elapsedSec)}` : formatDuration(telemetry.elapsedSec),
-    cardX + cardW - 24 * s,
-    cardY + 45 * s,
-  );
-  ctx.textAlign = 'left';
-
-  const barX = cardX + 24 * s;
-  const barW = cardW - 48 * s;
-  const barY = cardY + 62 * s;
-  drawRoundedRect(ctx, barX, barY, barW, 8 * s, 4 * s);
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
-  ctx.fill();
-
-  drawRoundedRect(ctx, barX, barY, Math.max(14 * s, barW * progress), 8 * s, 4 * s);
-  ctx.fillStyle = runner.jerseyColor;
-  ctx.fill();
-
-  const stats = [
-    { label: 'PACE (/KM)', value: `${formatPace(telemetry.point.paceSecPerKm)} /km` },
-    { label: 'HEART RATE', value: `${telemetry.point.hr} bpm` },
-    { label: 'CADENCE', value: `${telemetry.point.cadence} spm` },
-    { label: 'DISTANCE', value: `${telemetry.distanceKm.toFixed(2)} km` },
-    { label: 'ELEV GAIN', value: `+${telemetry.elevGainSoFarM} m` },
-    { label: 'TIME', value: formatDuration(telemetry.elapsedSec) },
-  ];
-
-  const colW = (cardW - 48 * s) / 3;
-  stats.forEach((st, idx) => {
-    const col = idx % 3;
-    const row = Math.floor(idx / 3);
-    const sx = cardX + 24 * s + col * colW;
-    const sy = cardY + (102 + row * 68) * s;
-
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.92)';
-    ctx.font = `600 ${Math.round(13 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText(st.label, sx, sy);
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `700 ${Math.round(24 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText(st.value, sx, sy + 27 * s);
-  });
 }
 
 export function pickSupportedVideoMimeType(): {
