@@ -138,7 +138,7 @@ function detectSoftwareWebGL(): boolean {
 
 class WebGLErrorBoundary extends Component<
   { children: React.ReactNode; onErrorFallback?: React.ReactNode },
-  { hasError: boolean }
+  { hasError: boolean; errorMsg: string }
 > {
   constructor(props: { children: React.ReactNode; onErrorFallback?: React.ReactNode }) {
     super(props);
@@ -154,7 +154,7 @@ class WebGLErrorBoundary extends Component<
       return (
         this.props.onErrorFallback ?? (
           <div className="w-full h-full flex items-center justify-center bg-slate-950 text-slate-300 text-xs p-6 text-center">
-            WebGL 3D belum tersedia / Error: {(this.state as any).errorMsg || "Periksa dukungan WebGL"}
+            WebGL 3D belum tersedia / Error: {this.state.errorMsg || "Periksa dukungan WebGL"}
           </div>
         )
       );
@@ -533,7 +533,7 @@ const SceneContent: React.FC<
       </group>
 
       {runner.characterStyle === 'custom-glb' && runner.customModelUrl ? (
-        <CanvasErrorBoundary key={runner.customModelUrl || "no-glb"} onErrorFallback={<RealisticRunner3D config={runner} telemetry={telemetry} isPlaying={isPlaying} />}><CustomGlbRunner3D
+        <WebGLErrorBoundary key={runner.customModelUrl || "no-glb"} onErrorFallback={<RealisticRunner3D config={effectiveRunnerConfig} position={runnerPos} yawRef={smoothYawRef} slopePitchRad={slopePitchRad} scale={runnerScale} cadenceSpm={currentCadence} paceSecPerKm={currentPaceSec} isPlaying={isPlaying} isFinishPose={isFinishPhase} includeFinishPose={includeFinishPose} isManualFinishCamera={mapConfig.cameraMode === 'finish-pose'} />}><CustomGlbRunner3D
           config={effectiveRunnerConfig}
           position={runnerPos}
           yawRef={smoothYawRef}
