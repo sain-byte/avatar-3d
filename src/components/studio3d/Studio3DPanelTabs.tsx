@@ -264,12 +264,6 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                   <div className="grid grid-cols-2 gap-1.5">
                     {[
                       {
-                        label: "Sain (Default)",
-                        url: "/models/ava-sain.glb",
-                        flip180: false,
-                        animMode: "auto" as const,
-                      },
-                      {
                         label: "Runner Taktis",
                         url: "https://threejs.org/examples/models/gltf/Soldier.glb",
                         flip180: true,

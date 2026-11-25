@@ -296,7 +296,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
           </mesh>
 
           {/* ACCESSORY: Trail Vest (fitted to athletic torso) */}
-          {config.accessory === 'trail-vest' && (
+          {showTrailVest && (
             <group name="RealisticTrailVest">
               <mesh position={[0, 0.26, -0.01]} castShadow>
                 <boxGeometry args={[isFemale ? 0.34 : 0.39, 0.38, 0.32]} />
@@ -593,7 +593,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
                 <meshStandardMaterial color={config.shoesColor} roughness={0.45} metalness={0.14} />
               </mesh>
               <mesh position={[0, -0.02, 0]}>
-                <boxGeometry args={[0.112, 0.036, 0.24]} />
+                <boxGeometry args={[isTrail ? 0.122 : 0.11, isTrail ? 0.048 : 0.034, isTrail ? 0.25 : 0.238]} />
                 <meshStandardMaterial color="#F8FAFC" roughness={0.55} />
               </mesh>
             </group>
