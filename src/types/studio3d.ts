@@ -187,7 +187,7 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
 export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
   durationPreset: 30,
   customDurationSec: 25,
-  includeFinishPose: false,
+  includeFinishPose: true,
   musicPreset: 'none',
   customAudioUrl: null,
   customAudioName: null,

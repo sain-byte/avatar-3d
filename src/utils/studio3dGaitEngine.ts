@@ -901,14 +901,15 @@ export function evaluateFinishPoseKinematics(
 export function computePreFinishGaitScale(
   timelineProgress: number,
   includeFinishPose: boolean,
-  isManualFinishMode: boolean,
+  isManualFinishCamera = false,
 ): number {
-  if (isManualFinishMode) return 0;
-  if (!includeFinishPose) return 1;
-  if (timelineProgress <= 0.835) return 1;
-  if (timelineProgress >= 0.88) return 0.28;
-  const p = smoothStep((timelineProgress - 0.835) / 0.045);
-  return lerpNum(1, 0.28, p);
+  if (isManualFinishCamera) return 0.12;
+  if (!includeFinishPose || timelineProgress < 0.82) return 1.0;
+  if (timelineProgress >= 0.90) return 0.14;
+  // Perlambatan bertahap (cool-down stride) sebelum garis finish agar tidak rem mendadak
+  const t = (timelineProgress - 0.82) / 0.08;
+  const ease = t * t * t * (t * (t * 6 - 15) + 10);
+  return 1.0 - ease * 0.86;
 }
 
 /**
@@ -921,9 +922,11 @@ export function computeFinishTransitionBlend(
   cameraMode: string,
 ): number {
   if (cameraMode === 'finish-pose') return 1;
-  if (!includeFinishPose || timelineProgress < 0.88) return 0;
-  if (timelineProgress >= 0.922) return 1;
-  return smoothStep((timelineProgress - 0.88) / 0.042);
+  if (!includeFinishPose || timelineProgress < 0.875) return 0;
+  if (timelineProgress >= 0.945) return 1;
+  // Quintic smootherstep (turunan ke-1 dan ke-2 = 0 di awal & akhir -> transisi tanpa hentakan)
+  const t = (timelineProgress - 0.875) / 0.07;
+  return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
 /**

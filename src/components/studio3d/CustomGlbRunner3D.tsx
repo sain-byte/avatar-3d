@@ -611,7 +611,7 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
       finishBlendRef.current = THREE.MathUtils.damp(
         finishBlendRef.current,
         targetFinishBlend,
-        isPlaying ? 6.5 : 14,
+        isPlaying ? 4.2 : 12,
         dt,
       );
       if (Math.abs(finishBlendRef.current - targetFinishBlend) < 0.002) {
@@ -654,13 +654,22 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
           idleAction.play();
           mixer.update(dt);
         } else if (engageBonesFinish && runAction) {
-          runAction.setEffectiveWeight(Math.max(0, 1 - finishBlend));
-          if (finishBlend < 0.99) {
-            mixer.update(dt * Math.max(0.15, activeGaitScale));
+          // Matikan bobot klip lari seiring naiknya finishBlend agar tulang tidak tarik-menarik
+          const clipWeight = Math.max(0, 1 - finishBlend * 1.15);
+          runAction.setEffectiveWeight(clipWeight);
+          if (clipWeight > 0.01) {
+            mixer.update(dt * Math.max(0.12, activeGaitScale));
+          } else {
+            // Reset tulang ke bind-pose bersih sebelum ditimpa kinematika Finish Pose
+            Object.values(rigMapRef.current).forEach((slot) => {
+              if (slot) slot.bone.quaternion.copy(slot.restQuat);
+            });
           }
         } else if (runAction) {
-          runAction.setEffectiveWeight(1);
-          mixer.update(dt * Math.max(0.2, 1 - finishBlend * 0.75));
+          // Untuk model GLB non-humanoid (static/custom rig), perlambat siklus lari secara halus lalu masuk pose selebrasi
+          const slowDown = Math.max(0.08, 1 - finishBlend * 0.92);
+          runAction.setEffectiveWeight(slowDown);
+          mixer.update(dt * slowDown);
         }
       } else {
         if (runAction) {

@@ -134,7 +134,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
       finishBlendRef.current = THREE.MathUtils.damp(
         finishBlendRef.current,
         targetFinishBlend,
-        isPlaying ? 6.5 : 14,
+        isPlaying ? 4.2 : 12,
         dt,
       );
       if (Math.abs(finishBlendRef.current - targetFinishBlend) < 0.002) {
