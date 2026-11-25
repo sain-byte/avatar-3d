@@ -1018,16 +1018,10 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   />
                 </div>
 
-                <div
-                  className="pointer-events-none absolute top-0 inset-x-0 pt-5 pb-4 px-3 z-10"
-                  style={{
-                    background:
-                      'linear-gradient(180deg, rgba(2,6,23,0.78) 0%, rgba(2,6,23,0.32) 70%, rgba(2,6,23,0) 100%)',
-                  }}
-                >
+                <div className="pointer-events-none absolute top-0 inset-x-0 pt-5 pb-2 px-3 z-10">
                   <div className="flex items-start justify-between gap-2">
                     <div className="h-14 flex flex-col justify-between min-w-0 flex-1 py-0.5 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
-                      <p className="font-mono-tabular text-[10px] font-extrabold tracking-wide text-orange-400 truncate leading-none">
+                      <p className="font-mono-tabular text-[10px] font-extrabold tracking-wide truncate leading-none" style={{ color: mapConfig.overlayColor || "#F97316" }}>
                         {(runner.runnerName || 'Pelari').trim()}
                       </p>
                       <p className="font-display text-[13px] font-bold text-white truncate leading-tight">
@@ -1055,7 +1049,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                         >
                           <polyline
                             fill="none"
-                            stroke="#FB923C"
+                            stroke={mapConfig.overlayColor || "#F97316"}
                             strokeWidth="2.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -1072,7 +1066,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                             cy={miniMap.runnerPt.y}
                             r="3.2"
                             fill="#FFFFFF"
-                            stroke="#EA580C"
+                            stroke={mapConfig.overlayColor || "#F97316"}
                             strokeWidth="1.4"
                           />
                         </svg>
@@ -1094,8 +1088,8 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                             className="font-mono-tabular text-[9px] font-bold flex items-center gap-2 text-white"
                           >
                             <span
-                              className={`w-10 shrink-0 font-extrabold ${
-                                isNewest ? 'text-lime-400' : 'text-orange-400'
+                              style={!isNewest ? { color: mapConfig.overlayColor || "#F97316" } : undefined} className={`w-10 shrink-0 font-extrabold ${
+                                isNewest ? 'text-lime-400' : ''
                               }`}
                             >
                               KM {sp.label}
@@ -1111,11 +1105,8 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                 </div>
 
                 <div
-                  className="pointer-events-none absolute bottom-0 inset-x-0 pt-12 pb-3.5 px-3.5 z-10 drop-shadow-[0_2px_6px_rgba(0,0,0,0.92)]"
-                  style={{
-                    background:
-                      'linear-gradient(0deg, rgba(2,6,23,0.82) 0%, rgba(2,6,23,0.42) 55%, rgba(2,6,23,0) 100%)',
-                  }}
+                  className="pointer-events-none absolute bottom-0 inset-x-0 pt-6 pb-3.5 px-3.5 z-10"
+                  style={{ textShadow: '0 1px 4px rgba(0,0,0,0.95), 0 0 2px rgba(0,0,0,0.95)' }}
                 >
                   {bannerState.finishAlpha > 0.15 ? (
                     <div
@@ -1127,9 +1118,9 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="w-1 h-6 rounded-full bg-[#FC4C02] shrink-0" />
+                        <span className="w-1 h-6 rounded-full shrink-0" style={{ backgroundColor: mapConfig.overlayColor || "#F97316" }} />
                         <div className="min-w-0">
-                          <p className="font-mono-tabular text-[8px] font-extrabold tracking-widest text-[#FC4C02] uppercase">
+                          <p className="font-mono-tabular text-[8px] font-extrabold tracking-widest uppercase" style={{ color: mapConfig.overlayColor || "#F97316" }}>
                             Activity Completed
                           </p>
                           <p className="font-display text-xs font-bold text-white truncate">
@@ -1199,7 +1190,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                           <span className="font-mono-tabular text-sm font-extrabold text-white">
                             {liveTelemetry.distanceKm.toFixed(2)}
                           </span>
-                          <span className="font-mono-tabular text-[9px] font-bold text-orange-400 ml-1">
+                          <span className="font-mono-tabular text-[9px] font-bold ml-1" style={{ color: mapConfig.overlayColor || "#F97316" }}>
                             / {activeTrack.totalDistanceKm.toFixed(2)} KM
                           </span>
                         </div>
@@ -1213,7 +1204,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                           className="h-full rounded-full transition-[width] duration-75"
                           style={{
                             width: `${Math.max(2, Math.min(100, progress * 100))}%`,
-                            backgroundColor: runner.jerseyColor || '#F97316',
+                            backgroundColor: mapConfig.overlayColor || '#F97316',
                           }}
                         />
                       </div>

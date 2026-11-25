@@ -462,6 +462,7 @@ const SceneContent: React.FC<
         track={track}
         mapStyle={mapConfig.mapStyle}
         routeStyle={mapConfig.routeStyle ?? 'google-maps'}
+        overlayColor={mapConfig.overlayColor ?? '#F97316'}
         buildings3d={mapConfig.buildings3d}
         isNight={isNightMood}
         jerseyColor={runner.jerseyColor}
@@ -477,7 +478,7 @@ const SceneContent: React.FC<
       <group position={[runnerPos.x, runnerPos.y + 0.08, runnerPos.z]}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[runnerScale * 0.52, runnerScale * 0.78, 32]} />
-          <meshBasicMaterial color={runner.jerseyColor} transparent opacity={0.85} side={THREE.DoubleSide} />
+          <meshBasicMaterial color={mapConfig.overlayColor ?? '#F97316'} transparent opacity={0.85} side={THREE.DoubleSide} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
           <circleGeometry args={[runnerScale * 0.52, 32]} />

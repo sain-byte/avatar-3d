@@ -276,56 +276,49 @@ function paintBroadcastHudOverlay(params: {
   height: number;
   track: Studio3DTrack;
   runner: RunnerConfig;
+  accentColor: string;
   telemetry: Studio3DFrameTelemetry;
   allSplits: KmSplitItem[];
   progress: number;
   includeFinishPose: boolean;
 }) {
-  const { ctx, width, height, track, runner, telemetry, allSplits, progress, includeFinishPose } = params;
+  const { ctx, width, height, track, runner, accentColor, telemetry, allSplits, progress, includeFinishPose } = params;
   const s = width / 720;
   const finishThreshold = includeFinishPose ? 0.88 : 1.0;
   const routeProgress = Math.min(1, Math.max(0, progress / finishThreshold));
 
-  const topGrad = ctx.createLinearGradient(0, 0, 0, 175 * s);
-  topGrad.addColorStop(0, 'rgba(2, 6, 23, 0.78)');
-  topGrad.addColorStop(0.65, 'rgba(2, 6, 23, 0.30)');
-  topGrad.addColorStop(1, 'rgba(2, 6, 23, 0)');
-  ctx.fillStyle = topGrad;
-  ctx.fillRect(0, 0, width, 175 * s);
-
-  const botGrad = ctx.createLinearGradient(0, height - 310 * s, 0, height);
-  botGrad.addColorStop(0, 'rgba(2, 6, 23, 0)');
-  botGrad.addColorStop(0.45, 'rgba(2, 6, 23, 0.45)');
-  botGrad.addColorStop(1, 'rgba(2, 6, 23, 0.82)');
-  ctx.fillStyle = botGrad;
-  ctx.fillRect(0, height - 310 * s, width, 310 * s);
-
   const padX = 32 * s;
   const topY = 28 * s;
-  const mmSize = 88 * s;
+  const mmSize = 86 * s;
   const runnerNameClean = (runner.runnerName || 'Pelari').trim().slice(0, 24);
   const locationClean = (track.location || '').trim();
   const metaSubline = locationClean
     ? `${track.date} · ${locationClean.slice(0, 24)}`
     : track.date;
 
-  // Header Kiri Atas: tinggi sejajar presisi dengan kotak GPS (88 * s)
+  // Header Kiri Atas tanpa blok hitam (mengandalkan stroke + drop shadow tajam)
   ctx.save();
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
-  ctx.shadowBlur = 6 * s;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
+  ctx.shadowBlur = 8 * s;
   ctx.shadowOffsetY = 1.5 * s;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(2, 6, 23, 0.72)';
+  ctx.lineWidth = 3 * s;
 
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#FB923C';
   ctx.font = `800 ${Math.round(13 * s)}px JetBrains Mono, monospace`;
+  ctx.strokeText(runnerNameClean, padX, topY + 18 * s);
+  ctx.fillStyle = accentColor;
   ctx.fillText(runnerNameClean, padX, topY + 18 * s);
 
-  ctx.fillStyle = '#FFFFFF';
   ctx.font = `700 ${Math.round(20 * s)}px Outfit, sans-serif`;
+  ctx.strokeText(track.title.slice(0, 24), padX, topY + 46 * s);
+  ctx.fillStyle = '#FFFFFF';
   ctx.fillText(track.title.slice(0, 24), padX, topY + 46 * s);
 
-  ctx.fillStyle = 'rgba(241, 245, 249, 0.92)';
   ctx.font = `600 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
+  ctx.strokeText(metaSubline, padX, topY + 72 * s);
+  ctx.fillStyle = '#F8FAFC';
   ctx.fillText(metaSubline, padX, topY + 72 * s);
   ctx.restore();
 
@@ -333,13 +326,13 @@ function paintBroadcastHudOverlay(params: {
   const mmX = width - padX - mmSize;
   const mmY = topY;
   drawRoundedRect(ctx, mmX, mmY, mmSize, mmSize, 14 * s);
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.52)';
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.42)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.24)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.32)';
   ctx.lineWidth = Math.max(1, 1.3 * s);
   ctx.stroke();
 
-  ctx.fillStyle = 'rgba(226, 232, 240, 0.92)';
+  ctx.fillStyle = '#FFFFFF';
   ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
   ctx.fillText('GPS', mmX + 9 * s, mmY + 15 * s);
 
@@ -351,28 +344,28 @@ function paintBroadcastHudOverlay(params: {
     for (let i = 1; i < mmGeom.polyline.length; i += 1) {
       ctx.lineTo(mmX + mmGeom.polyline[i].x, mmY + mmGeom.polyline[i].y);
     }
-    ctx.strokeStyle = '#FB923C';
-    ctx.lineWidth = Math.max(1.8, 2.8 * s);
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = Math.max(1.8, 2.6 * s);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(mmX + mmGeom.startPt.x, mmY + mmGeom.startPt.y, 3.2 * s, 0, Math.PI * 2);
+    ctx.arc(mmX + mmGeom.startPt.x, mmY + mmGeom.startPt.y, 3 * s, 0, Math.PI * 2);
     ctx.fillStyle = '#A3E635';
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(mmX + mmGeom.runnerPt.x, mmY + mmGeom.runnerPt.y, 4.5 * s, 0, Math.PI * 2);
+    ctx.arc(mmX + mmGeom.runnerPt.x, mmY + mmGeom.runnerPt.y, 4.2 * s, 0, Math.PI * 2);
     ctx.fillStyle = '#FFFFFF';
     ctx.fill();
-    ctx.strokeStyle = '#EA580C';
-    ctx.lineWidth = Math.max(1.2, 2 * s);
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = Math.max(1.2, 1.8 * s);
     ctx.stroke();
     ctx.restore();
   }
 
-  // Km Splits Permanen (Menempel & tidak hilang sampai akhir)
+  // Km Splits Permanen tanpa blok hitam
   const visibleSplits = getCompletedKmSplits(
     allSplits,
     telemetry.distanceKm,
@@ -380,64 +373,67 @@ function paintBroadcastHudOverlay(params: {
   );
   if (visibleSplits.length > 0) {
     const startSplitY = topY + mmSize + 14 * s;
-    const rowH = 26 * s;
+    const rowH = 25 * s;
 
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
-    ctx.shadowBlur = 5 * s;
-    ctx.shadowOffsetY = 1 * s;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
+    ctx.shadowBlur = 7 * s;
+    ctx.shadowOffsetY = 1.5 * s;
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(2, 6, 23, 0.72)';
+    ctx.lineWidth = 2.6 * s;
 
     visibleSplits.forEach((sp, idx) => {
       const sy = startSplitY + idx * rowH;
       const isNewest = idx === visibleSplits.length - 1 && !telemetry.isFinishPhase;
 
-      ctx.fillStyle = isNewest ? '#A3E635' : '#FB923C';
       ctx.font = `800 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(`KM ${sp.label}`, padX, sy + 16 * s);
+      ctx.fillStyle = isNewest ? '#A3E635' : accentColor;
       ctx.fillText(`KM ${sp.label}`, padX, sy + 16 * s);
 
-      ctx.fillStyle = '#FFFFFF';
+      const valText = `${formatPace(sp.avgPaceSecPerKm)}/km · ${sp.avgHr} bpm`;
       ctx.font = `700 ${Math.round(12 * s)}px JetBrains Mono, monospace`;
-      ctx.fillText(
-        `${formatPace(sp.avgPaceSecPerKm)}/km · ${sp.avgHr} bpm`,
-        padX + 66 * s,
-        sy + 16 * s,
-      );
+      ctx.strokeText(valText, padX + 66 * s, sy + 16 * s);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(valText, padX + 66 * s, sy + 16 * s);
     });
     ctx.restore();
   }
 
   const banner = computeStartFinishBannerState(progress, includeFinishPose);
 
-  // Overlay Bawah Transparan (Tanpa block hitam solid)
+  // Overlay Bawah Transparan Murni (Tanpa block hitam)
   ctx.save();
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.90)';
-  ctx.shadowBlur = 8 * s;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.94)';
+  ctx.shadowBlur = 9 * s;
   ctx.shadowOffsetY = 2 * s;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(2, 6, 23, 0.75)';
+  ctx.lineWidth = 3 * s;
 
   const baseX = padX;
   const baseW = width - padX * 2;
   const colW = baseW / 3;
 
   if (banner.finishAlpha > 0.15) {
-    // Strava-Style Transparent Finish Summary
-    const topFinishY = height - 226 * s;
+    const topFinishY = height - 224 * s;
 
     drawRoundedRect(ctx, baseX, topFinishY, 5 * s, 38 * s, 2.5 * s);
-    ctx.fillStyle = '#FC4C02';
+    ctx.fillStyle = accentColor;
     ctx.fill();
 
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#FC4C02';
     ctx.font = `800 ${Math.round(11 * s)}px JetBrains Mono, monospace`;
+    ctx.strokeText('ACTIVITY COMPLETED', baseX + 14 * s, topFinishY + 13 * s);
+    ctx.fillStyle = accentColor;
     ctx.fillText('ACTIVITY COMPLETED', baseX + 14 * s, topFinishY + 13 * s);
 
-    ctx.fillStyle = '#FFFFFF';
+    const titleLine = `${runnerNameClean} · ${track.title.slice(0, 20)}`;
     ctx.font = `700 ${Math.round(19 * s)}px Outfit, sans-serif`;
-    ctx.fillText(
-      `${runnerNameClean} · ${track.title.slice(0, 20)}`,
-      baseX + 14 * s,
-      topFinishY + 35 * s,
-    );
+    ctx.strokeText(titleLine, baseX + 14 * s, topFinishY + 35 * s);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(titleLine, baseX + 14 * s, topFinishY + 35 * s);
 
     const stravaMetrics = [
       { label: 'DISTANCE', value: `${track.totalDistanceKm.toFixed(2)} km` },
@@ -447,12 +443,14 @@ function paintBroadcastHudOverlay(params: {
     stravaMetrics.forEach((m, idx) => {
       const mx = baseX + idx * colW;
       const my = topFinishY + 68 * s;
-      ctx.fillStyle = 'rgba(226, 232, 240, 0.88)';
       ctx.font = `700 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(m.label, mx, my);
+      ctx.fillStyle = '#F1F5F9';
       ctx.fillText(m.label, mx, my);
 
-      ctx.fillStyle = '#FFFFFF';
       ctx.font = `800 ${Math.round(23 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(m.value, mx, my + 26 * s);
+      ctx.fillStyle = '#FFFFFF';
       ctx.fillText(m.value, mx, my + 26 * s);
     });
 
@@ -464,42 +462,48 @@ function paintBroadcastHudOverlay(params: {
     subMetrics.forEach((m, idx) => {
       const mx = baseX + idx * colW;
       const my = topFinishY + 128 * s;
-      ctx.fillStyle = 'rgba(226, 232, 240, 0.85)';
       ctx.font = `600 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(m.label, mx, my);
+      ctx.fillStyle = '#E2E8F0';
       ctx.fillText(m.label, mx, my);
 
-      ctx.fillStyle = '#F8FAFC';
       ctx.font = `700 ${Math.round(18 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(m.value, mx, my + 22 * s);
+      ctx.fillStyle = '#FFFFFF';
       ctx.fillText(m.value, mx, my + 22 * s);
     });
   } else {
-    // Live Transparent HUD Telemetry
     const topLiveY = height - 208 * s;
     const distStr = telemetry.distanceKm.toFixed(2);
 
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#FFFFFF';
     ctx.font = `800 ${Math.round(28 * s)}px JetBrains Mono, monospace`;
+    ctx.strokeText(distStr, baseX, topLiveY + 26 * s);
+    ctx.fillStyle = '#FFFFFF';
     ctx.fillText(distStr, baseX, topLiveY + 26 * s);
     const distW = ctx.measureText(distStr).width;
 
-    ctx.fillStyle = '#FB923C';
+    const totalStr = ` / ${track.totalDistanceKm.toFixed(2)} KM`;
     ctx.font = `700 ${Math.round(13 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText(` / ${track.totalDistanceKm.toFixed(2)} KM`, baseX + distW, topLiveY + 25 * s);
+    ctx.strokeText(totalStr, baseX + distW, topLiveY + 25 * s);
+    ctx.fillStyle = accentColor;
+    ctx.fillText(totalStr, baseX + distW, topLiveY + 25 * s);
 
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#FFFFFF';
+    const timeStr = formatDuration(telemetry.elapsedSec);
     ctx.font = `700 ${Math.round(15 * s)}px JetBrains Mono, monospace`;
-    ctx.fillText(formatDuration(telemetry.elapsedSec), baseX + baseW, topLiveY + 25 * s);
+    ctx.strokeText(timeStr, baseX + baseW, topLiveY + 25 * s);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(timeStr, baseX + baseW, topLiveY + 25 * s);
     ctx.textAlign = 'left';
 
     const barY = topLiveY + 38 * s;
     drawRoundedRect(ctx, baseX, barY, baseW, 5 * s, 2.5 * s);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
     ctx.fill();
 
     drawRoundedRect(ctx, baseX, barY, Math.max(12 * s, baseW * progress), 5 * s, 2.5 * s);
-    ctx.fillStyle = runner.jerseyColor || '#F97316';
+    ctx.fillStyle = accentColor;
     ctx.fill();
 
     const stats = [
@@ -517,12 +521,14 @@ function paintBroadcastHudOverlay(params: {
       const sx = baseX + col * colW;
       const sy = topLiveY + (68 + row * 56) * s;
 
-      ctx.fillStyle = 'rgba(226, 232, 240, 0.88)';
       ctx.font = `600 ${Math.round(10 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(st.label, sx, sy);
+      ctx.fillStyle = '#F1F5F9';
       ctx.fillText(st.label, sx, sy);
 
-      ctx.fillStyle = '#FFFFFF';
       ctx.font = `700 ${Math.round(19 * s)}px JetBrains Mono, monospace`;
+      ctx.strokeText(st.value, sx, sy + 22 * s);
+      ctx.fillStyle = '#FFFFFF';
       ctx.fillText(st.value, sx, sy + 22 * s);
     });
   }
@@ -559,6 +565,7 @@ export interface ExportVideoCallbacks {
   track: Studio3DTrack;
   runner: RunnerConfig;
   exportConfig: ExportConfig;
+  overlayColor?: string;
   onPercent: (pct: number) => void;
   abortSignal: AbortSignal;
 }
@@ -571,6 +578,7 @@ export async function recordStudio3DVideo({
   track,
   runner,
   exportConfig,
+  overlayColor = '#F97316',
   onPercent,
   abortSignal,
 }: ExportVideoCallbacks): Promise<{ blob: Blob; filename: string; extension: 'mp4' | 'webm' }> {
@@ -682,6 +690,7 @@ export async function recordStudio3DVideo({
         height,
         track,
         runner,
+        accentColor: overlayColor,
         telemetry,
         allSplits,
         progress: p,
