@@ -452,6 +452,21 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
     return () => controller.abort();
   }, [track?.id]);
 
+  
+  const effectiveOverlayTextColor =
+    !mapConfig.overlayTextColor || mapConfig.overlayTextColor === 'auto'
+      ? mapConfig.mapStyle === 'dark'
+        ? '#FFFFFF'
+        : '#0F172A'
+      : mapConfig.overlayTextColor;
+  const isDarkOverlayText =
+    effectiveOverlayTextColor.toLowerCase() === '#0f172a' ||
+    effectiveOverlayTextColor.toLowerCase() === '#000000' ||
+    effectiveOverlayTextColor.toLowerCase() === '#1e293b';
+  const overlayTextShadow = isDarkOverlayText
+    ? '0 1px 2px rgba(255,255,255,0.92), 0 0 6px rgba(255,255,255,0.88)'
+    : '0 1px 4px rgba(0,0,0,0.95), 0 0 2px rgba(0,0,0,0.95)';
+
   const allKmSplits = useMemo(() => (activeTrack ? computeTrackKmSplits(activeTrack) : []), [activeTrack]);
 
   const visibleKmSplits = useMemo(
@@ -1018,16 +1033,16 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   />
                 </div>
 
-                <div className="pointer-events-none absolute top-0 inset-x-0 pt-5 pb-2 px-3 z-10">
+                <div className="pointer-events-none absolute top-0 inset-x-0 pt-5 pb-2 px-3 z-10" style={{ color: effectiveOverlayTextColor, textShadow: overlayTextShadow }}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="h-14 flex flex-col justify-between min-w-0 flex-1 py-0.5 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
                       <p className="font-mono-tabular text-[10px] font-extrabold tracking-wide truncate leading-none" style={{ color: mapConfig.overlayColor || "#F97316" }}>
                         {(runner.runnerName || 'Pelari').trim()}
                       </p>
-                      <p className="font-display text-[13px] font-bold text-white truncate leading-tight">
+                      <p className="font-display text-[13px] font-bold  truncate leading-tight">
                         {activeTrack.title}
                       </p>
-                      <p className="font-mono-tabular text-[9px] font-medium text-slate-100/90 truncate leading-none">
+                      <p className="font-mono-tabular text-[9px] font-medium opacity-85 truncate leading-none">
                         {activeTrack.location?.trim()
                           ? `${activeTrack.date} · ${activeTrack.location.trim()}`
                           : activeTrack.date}
@@ -1085,7 +1100,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                         return (
                           <div
                             key={sp.index}
-                            className="font-mono-tabular text-[9px] font-bold flex items-center gap-2 text-white"
+                            className="font-mono-tabular text-[9px] font-bold flex items-center gap-2 "
                           >
                             <span
                               style={!isNewest ? { color: mapConfig.overlayColor || "#F97316" } : undefined} className={`w-10 shrink-0 font-extrabold ${
@@ -1106,7 +1121,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
 
                 <div
                   className="pointer-events-none absolute bottom-0 inset-x-0 pt-6 pb-3.5 px-3.5 z-10"
-                  style={{ textShadow: '0 1px 4px rgba(0,0,0,0.95), 0 0 2px rgba(0,0,0,0.95)' }}
+                  style={{ color: effectiveOverlayTextColor, textShadow: overlayTextShadow }}
                 >
                   {bannerState.finishAlpha > 0.15 ? (
                     <div
@@ -1123,7 +1138,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                           <p className="font-mono-tabular text-[8px] font-extrabold tracking-widest uppercase" style={{ color: mapConfig.overlayColor || "#F97316" }}>
                             Activity Completed
                           </p>
-                          <p className="font-display text-xs font-bold text-white truncate">
+                          <p className="font-display text-xs font-bold  truncate">
                             {(runner.runnerName || 'Pelari').trim()} · {activeTrack.title}
                           </p>
                         </div>
@@ -1131,26 +1146,26 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
 
                       <div className="grid grid-cols-3 gap-1.5">
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             DISTANCE
                           </span>
-                          <span className="font-mono-tabular text-xs font-extrabold text-white">
+                          <span className="font-mono-tabular text-xs font-extrabold ">
                             {activeTrack.totalDistanceKm.toFixed(2)} km
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             AVG PACE
                           </span>
-                          <span className="font-mono-tabular text-xs font-extrabold text-white">
+                          <span className="font-mono-tabular text-xs font-extrabold ">
                             {formatPace(activeTrack.avgPaceSecPerKm)} /km
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             TIME
                           </span>
-                          <span className="font-mono-tabular text-xs font-extrabold text-white">
+                          <span className="font-mono-tabular text-xs font-extrabold ">
                             {formatDuration(activeTrack.totalDurationSec)}
                           </span>
                         </div>
@@ -1158,26 +1173,26 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
 
                       <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-white/15">
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/80">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             AVG HR
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-slate-100">
+                          <span className="font-mono-tabular text-[10px] font-bold opacity-95">
                             {activeTrack.avgHr} bpm
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/80">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             CADENCE
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-slate-100">
+                          <span className="font-mono-tabular text-[10px] font-bold opacity-95">
                             {activeTrack.avgCadence} spm
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/80">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             ELEV GAIN
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-slate-100">
+                          <span className="font-mono-tabular text-[10px] font-bold opacity-95">
                             +{activeTrack.elevationGainM} m
                           </span>
                         </div>
@@ -1187,14 +1202,14 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                     <div className="space-y-1.5">
                       <div className="flex items-baseline justify-between gap-2">
                         <div className="min-w-0 truncate">
-                          <span className="font-mono-tabular text-sm font-extrabold text-white">
+                          <span className="font-mono-tabular text-sm font-extrabold ">
                             {liveTelemetry.distanceKm.toFixed(2)}
                           </span>
                           <span className="font-mono-tabular text-[9px] font-bold ml-1" style={{ color: mapConfig.overlayColor || "#F97316" }}>
                             / {activeTrack.totalDistanceKm.toFixed(2)} KM
                           </span>
                         </div>
-                        <span className="font-mono-tabular text-[10px] font-bold text-white shrink-0">
+                        <span className="font-mono-tabular text-[10px] font-bold  shrink-0">
                           {formatDuration(liveTelemetry.elapsedSec)}
                         </span>
                       </div>
@@ -1211,50 +1226,50 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
 
                       <div className="grid grid-cols-3 gap-x-1.5 gap-y-1">
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             PACE (/KM)
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                          <span className="font-mono-tabular text-[10px] font-bold ">
                             {formatPace(liveTelemetry.point.paceSecPerKm)} /km
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             HEART RATE
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                          <span className="font-mono-tabular text-[10px] font-bold ">
                             {liveTelemetry.point.hr} bpm
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             CADENCE
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                          <span className="font-mono-tabular text-[10px] font-bold ">
                             {liveTelemetry.point.cadence} spm
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             DISTANCE
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                          <span className="font-mono-tabular text-[10px] font-bold ">
                             {liveTelemetry.distanceKm.toFixed(2)} km
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             ELEV GAIN
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                          <span className="font-mono-tabular text-[10px] font-bold ">
                             +{liveTelemetry.elevGainSoFarM} m
                           </span>
                         </div>
                         <div>
-                          <span className="block font-mono-tabular text-[8px] text-slate-200/85">
+                          <span className="block font-mono-tabular text-[8px] opacity-75">
                             TIME
                           </span>
-                          <span className="font-mono-tabular text-[10px] font-bold text-white">
+                          <span className="font-mono-tabular text-[10px] font-bold ">
                             {formatDuration(liveTelemetry.elapsedSec)}
                           </span>
                         </div>
@@ -1447,8 +1462,81 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
               ))}
             </div>
           </div>
+                <div className="w-full max-w-[780px] flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono-tabular text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+              Teks:
+            </span>
+            {[
+              { val: 'auto', label: 'Auto' },
+              { val: '#FFFFFF', label: 'Putih' },
+              { val: '#0F172A', label: 'Hitam' },
+            ].map((opt) => {
+              const active = (mapConfig.overlayTextColor || 'auto') === opt.val;
+              return (
+                <button
+                  key={opt.val}
+                  type="button"
+                  onClick={() =>
+                    setMapConfig((prev) => ({ ...prev, overlayTextColor: opt.val }))
+                  }
+                  className={`px-2 py-0.5 rounded-md font-semibold text-[10px] border transition-colors cursor-pointer ${
+                    active
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+            <input
+              type="color"
+              title="Custom Warna Teks Overlay"
+              value={
+                !mapConfig.overlayTextColor || mapConfig.overlayTextColor === 'auto'
+                  ? effectiveOverlayTextColor
+                  : mapConfig.overlayTextColor
+              }
+              onChange={(e) =>
+                setMapConfig((prev) => ({ ...prev, overlayTextColor: e.target.value }))
+              }
+              className="w-5 h-5 rounded border border-slate-300 dark:border-slate-700 bg-transparent p-0 cursor-pointer"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono-tabular text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+              Garis:
+            </span>
+            {['#F97316', '#0F172A', '#38BDF8', '#A3E635', '#F43F5E'].map((hex) => {
+              const active = (mapConfig.overlayColor || '#F97316').toLowerCase() === hex.toLowerCase();
+              return (
+                <button
+                  key={hex}
+                  type="button"
+                  onClick={() =>
+                    setMapConfig((prev) => ({ ...prev, overlayColor: hex }))
+                  }
+                  className={`w-4 h-4 rounded-full border transition-transform cursor-pointer ${
+                    active ? 'scale-125 border-slate-900 dark:border-white' : 'border-slate-300 dark:border-slate-600'
+                  }`}
+                  style={{ backgroundColor: hex }}
+                />
+              );
+            })}
+            <input
+              type="color"
+              title="Custom Warna Garis & Aksen"
+              value={mapConfig.overlayColor || '#F97316'}
+              onChange={(e) =>
+                setMapConfig((prev) => ({ ...prev, overlayColor: e.target.value }))
+              }
+              className="w-5 h-5 rounded border border-slate-300 dark:border-slate-700 bg-transparent p-0 cursor-pointer"
+            />
+          </div>
         </div>
-      </section>
+      </div>
 
       <Studio3DPanelTabs
         activeTab={activeTab}
