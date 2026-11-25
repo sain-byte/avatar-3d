@@ -172,8 +172,8 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                 <div className="grid grid-cols-3 gap-1.5">
                   {(
                     [
-                      { id: 'chibi', label: 'Chibi 3D' },
-                      { id: 'realistic', label: 'Atlet Realistis' },
+                      { id: 'realistic', label: 'Atlet Road' },
+                      { id: 'trail-pro', label: 'Atlet Trail' },
                       { id: 'custom-glb', label: 'Custom .GLB' },
                     ] as Array<{ id: CharacterStyle3D; label: string }>
                   ).map((st) => (

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import maplibregl from 'maplibre-gl';
@@ -186,12 +185,12 @@ function add3DBuildingsToMap(map: maplibregl.Map, mode: MapMode3D, enabled: bool
       source: 'openmaptiles',
       'source-layer': 'building',
       type: 'fill-extrusion',
-      minzoom: 14,
+      minzoom: 13.5,
       paint: {
         'fill-extrusion-color': mode === 'dark' ? '#64748b' : '#b8c4d1',
-        'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 10],
+        'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 12],
         'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
-        'fill-extrusion-opacity': 0.85,
+        'fill-extrusion-opacity': 0.88,
       },
     },
     labelLayer?.id,
@@ -221,7 +220,6 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
   currentModeRef.current = mapStyle;
   buildings3dRef.current = buildings3d;
 
-  // Inisialisasi MapLibre GL dengan OpenFreeMap
   useEffect(() => {
     if (!mapContainer) return;
 
@@ -230,16 +228,17 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
       loadedTiles: 0,
       failedTiles: 0,
       totalTiles: 1,
-      zoom: 15,
+      zoom: 16,
     });
 
     const map = new maplibregl.Map({
       container: mapContainer,
       style: MAP_STYLES[currentModeRef.current],
       center: [track.centerLon, track.centerLat],
-      zoom: 15.5,
-      pitch: 45,
+      zoom: 16.5,
+      pitch: buildings3dRef.current ? 56 : 0,
       bearing: 0,
+      maxPitch: 85,
       interactive: false,
       attributionControl: false,
       canvasContextAttributes: {
@@ -291,7 +290,6 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapContainer, track.id, mapReloadNonce]);
 
-  // Ganti Light / Dark mode secara dinamis
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -317,14 +315,13 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     });
   }, [mapStyle, onMapLoadStatus]);
 
-  // Toggle bangunan 3D ON / OFF
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
     add3DBuildingsToMap(map, currentModeRef.current, buildings3d);
   }, [buildings3d]);
 
-  // Sinkronisasi kamera MapLibre GL 1:1 dengan kamera Three.js setiap frame
+  // Sinkronisasi kamera MapLibre GL 1:1 dengan Three.js
   useFrame(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -332,7 +329,6 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     const fwd = forwardVecRef.current;
     camera.getWorldDirection(fwd);
 
-    // Hitung perpotongan sinar kamera dengan bidang tanah Y = 0
     const dy = fwd.y < -0.02 ? fwd.y : -0.02;
     const tGround = Math.max(1, -camera.position.y / dy);
     const lookX = camera.position.x + fwd.x * tGround;
@@ -342,29 +338,31 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     const centerLat = track.centerLat - lookZ / 111320;
     const centerLon = track.centerLon + lookX / (111320 * cosLat);
 
-    // Pitch dari vertikal (0 = top-down, 85 = horizon)
     const horizForward = Math.hypot(fwd.x, fwd.z);
-    const pitchDeg = THREE.MathUtils.clamp(
+    const rawPitchDeg = THREE.MathUtils.clamp(
       (Math.atan2(horizForward, Math.max(0.001, -fwd.y)) * 180) / Math.PI,
       0,
-      85,
+      78,
     );
-
-    // Bearing searah arah pandang kamera (-Z = Utara = 0 deg, +X = Timur = 90 deg)
+    // Saat 3D OFF, kunci tampilan menjadi 2D top-down datar (pitch 0)
+    const pitchDeg = buildings3d ? rawPitchDeg : 0;
     const bearingDeg = (Math.atan2(fwd.x, -fwd.z) * 180) / Math.PI;
 
-    // Skala zoom Mercator berdasarkan tinggi kamera dan FOV vertikal Three.js
     const fovRad =
       camera instanceof THREE.PerspectiveCamera
         ? (camera.fov * Math.PI) / 180
         : (45 * Math.PI) / 180;
-    const distToGround = Math.max(12, Math.hypot(lookX - camera.position.x, camera.position.y, lookZ - camera.position.z));
-    const visibleHeightM = 2 * distToGround * Math.tan(fovRad * 0.5);
-    const metersPerPixel = Math.max(0.05, visibleHeightM / Math.max(1, size.height));
-    const zoom = THREE.MathUtils.clamp(
-      Math.log2((156543.03392 * cosLat) / metersPerPixel),
+    const distToGround = Math.max(
       10,
-      20,
+      Math.hypot(lookX - camera.position.x, camera.position.y, lookZ - camera.position.z),
+    );
+    const visibleHeightM = 2 * distToGround * Math.tan(fovRad * 0.5);
+    // MapLibre world size = 512px per tile (2x 256px)
+    const metersPerPixel = Math.max(0.04, visibleHeightM / Math.max(1, size.height));
+    const zoom = THREE.MathUtils.clamp(
+      Math.log2((78271.51696 * cosLat) / metersPerPixel),
+      11,
+      20.5,
     );
 
     map.jumpTo({
@@ -375,9 +373,8 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     });
   });
 
-  // Render garis rute & landmark di bidang datar Y=0 agar selaras dengan MapLibre GL
-  const routeHalfWidth = Math.max(0.55, Math.min(1.25, track.spanMeters * 0.00062));
-  const chevronTileM = Math.max(4.5, routeHalfWidth * 7.2);
+  const routeHalfWidth = Math.max(0.85, Math.min(1.65, track.spanMeters * 0.00085));
+  const chevronTileM = Math.max(5.5, routeHalfWidth * 7.2);
   const showCasing = routeStyle !== 'minimal-clean';
   const showChevrons = routeStyle !== 'minimal-clean';
 
@@ -385,26 +382,26 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
   useEffect(() => () => chevronTex.dispose(), [chevronTex]);
 
   const casingRibbonGeo = useMemo(
-    () => buildSlimRouteRibbonGeometry(groundedPath, routeHalfWidth * 1.42, { tileLenM: chevronTileM }),
+    () => buildSlimRouteRibbonGeometry(groundedPath, routeHalfWidth * 1.45, { tileLenM: chevronTileM }),
     [groundedPath, routeHalfWidth, chevronTileM],
   );
   const guideRibbonGeo = useMemo(
-    () => buildSlimRouteRibbonGeometry(groundedPath, routeHalfWidth * 0.88, { tileLenM: chevronTileM }),
+    () => buildSlimRouteRibbonGeometry(groundedPath, routeHalfWidth * 0.9, { tileLenM: chevronTileM }),
     [groundedPath, routeHalfWidth, chevronTileM],
   );
   const activeRibbonGeo = useMemo(
     () =>
       routeStyle === 'google-pace'
-        ? buildPaceColoredRouteRibbonGeometry(groundedPath, track.points, routeHalfWidth * 1.06, {
+        ? buildPaceColoredRouteRibbonGeometry(groundedPath, track.points, routeHalfWidth * 1.08, {
             tileLenM: chevronTileM,
           })
-        : buildSlimRouteRibbonGeometry(groundedPath, routeHalfWidth * 1.06, {
+        : buildSlimRouteRibbonGeometry(groundedPath, routeHalfWidth * 1.08, {
             tileLenM: chevronTileM,
           }),
     [groundedPath, track.points, routeStyle, routeHalfWidth, chevronTileM],
   );
   const chevronRibbonGeo = useMemo(
-    () => buildSlimRouteRibbonGeometry(groundedPath, routeHalfWidth * 0.94, { tileLenM: chevronTileM }),
+    () => buildSlimRouteRibbonGeometry(groundedPath, routeHalfWidth * 0.95, { tileLenM: chevronTileM }),
     [groundedPath, routeHalfWidth, chevronTileM],
   );
 
@@ -481,14 +478,13 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
       });
   }, [track.landmarks, groundedPath]);
 
-  const landmarkScale = Math.max(1.1, Math.min(3.2, track.spanMeters * 0.002));
+  const landmarkScale = Math.max(1.2, Math.min(3.5, track.spanMeters * 0.0022));
 
   return (
     <group name="TerrainMapRoot">
-      {/* Ground shadow receiver invisible plane at Y=0 */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[12000, 12000]} />
-        <shadowMaterial transparent opacity={isNight ? 0.35 : 0.22} />
+        <shadowMaterial transparent opacity={isNight ? 0.35 : 0.24} />
       </mesh>
 
       {showCasing && (

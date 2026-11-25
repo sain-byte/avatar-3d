@@ -1,7 +1,7 @@
 export type RunnerGender = 'male' | 'female';
 export type RunnerHairStyle = 'undercut' | 'spiky' | 'side-fade';
 export type RunnerAccessory = 'none' | 'cap' | 'headband' | 'visor' | 'trail-vest';
-export type CharacterStyle3D = 'chibi' | 'realistic' | 'custom-glb';
+export type CharacterStyle3D = 'realistic' | 'trail-pro' | 'custom-glb';
 export type CharacterSize3D = 'small' | 'medium' | 'large';
 export type GaitMode3D = 'auto' | 'walk' | 'jog' | 'run' | 'sprint';
 export type FinishPoseStyle3D = 'celebrate-jump' | 'exhausted-bow' | 'victory-raise';
@@ -105,7 +105,6 @@ export interface Studio3DTrackPoint {
 }
 
 export type LandmarkType3D = 'start' | 'finish' | 'peak' | 'km' | 'custom';
-
 export interface Studio3DLandmark {
   id: string;
   label: string;
@@ -141,7 +140,7 @@ export interface Studio3DTrack {
 }
 
 export const DEFAULT_RUNNER_CONFIG: RunnerConfig = {
-  characterStyle: 'chibi',
+  characterStyle: 'realistic',
   characterSize: 'medium',
   gaitMode: 'auto',
   finishPoseStyle: 'celebrate-jump',

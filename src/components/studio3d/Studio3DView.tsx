@@ -71,6 +71,7 @@ interface Studio3DViewProps {
   lang: Language;
   isGuest?: boolean;
   onRequestSignIn?: () => void;
+  externalUploadTrigger?: number;
 }
 
 const INITIAL_MAP_LOAD_STATUS: MapLoadStatus = {
@@ -86,7 +87,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
   user,
   lang,
   isGuest = false,
-  onRequestSignIn,
+  externalUploadTrigger = 0,
 }) => {
   const t3d = getTranslations(lang).public3d;
   const initialPicked = useMemo(
@@ -141,6 +142,9 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
   >('idle');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (externalUploadTrigger > 0) fileInputRef.current?.click();
+  }, [externalUploadTrigger]);
   const webglCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const mapCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const audioEngineRef = useRef<Studio3DAudioEngine | null>(null);
@@ -660,64 +664,39 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
 
   return (
     <div data-testid="view-studio3d" className="space-y-4">
-      <header className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3.5 sm:px-5 shadow-xs space-y-2.5">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-          <div className="min-w-0 space-y-0.5">
-            <h1 className="font-display text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate">
-              {track ? `Studio Animasi 3D · ${track.title}` : 'Studio Animasi 3D'}
-            </h1>
+      <header className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 shadow-xs space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
             {track ? (
               <p
                 data-testid="studio3d-top-summary"
-                className="font-mono-tabular text-xs font-medium text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-x-2 gap-y-0.5"
+                className="font-mono-tabular text-[11px] font-medium text-slate-600 dark:text-slate-300 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap"
               >
                 <span className="font-bold text-slate-900 dark:text-white">
                   {track.totalDistanceKm.toFixed(2)} km
                 </span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="text-slate-400">·</span>
                 <span>{formatDuration(track.totalDurationSec)}</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
-                <span>{formatPace(track.avgPaceSecPerKm)} /km</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="text-slate-400">·</span>
+                <span>{formatPace(track.avgPaceSecPerKm)}/km</span>
+                <span className="text-slate-400">·</span>
                 <span>{track.avgHr} bpm</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
-                <span>{track.avgCadence} spm</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="text-slate-400">·</span>
                 <span className="text-emerald-600 dark:text-emerald-400">
-                  +{track.elevationGainM} m
+                  +{track.elevationGainM}m
                 </span>
               </p>
             ) : (
               <p
                 data-testid="studio3d-top-summary"
-                className="text-xs font-medium text-slate-500 dark:text-slate-400"
+                className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate"
               >
-                {isGuest ? (
-                  <>
-                    {t3d.guestUploadHint}
-                    {onRequestSignIn && (
-                      <>
-                        {' '}
-                        <button
-                          type="button"
-                          onClick={onRequestSignIn}
-                          className="text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
-                        >
-                          {t3d.signInBtn}
-                        </button>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    Upload file <strong>.FIT / .GPX</strong> atau pilih riwayat lari untuk merender peta dunia nyata 3D.
-                  </>
-                )}
+                {t3d.guestUploadHint}
               </p>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <input
               ref={fileInputRef}
               type="file"
@@ -730,15 +709,6 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                 e.target.value = '';
               }}
             />
-            <button
-              type="button"
-              data-testid="studio3d-upload-btn"
-              onClick={() => fileInputRef.current?.click()}
-              className="h-8 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-colors cursor-pointer"
-            >
-              <FileUp className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Upload .FIT / .GPX</span>
-            </button>
 
             {runs.length > 0 && (
               <div className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950">

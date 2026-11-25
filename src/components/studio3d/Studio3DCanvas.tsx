@@ -1,4 +1,3 @@
-
 import React, { Component, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -15,7 +14,6 @@ import {
   sampleGroundedRouteAtProgress,
 } from '../../utils/studio3dGpsEngine';
 import { resolveEffectiveCameraMode } from '../../utils/studio3dRunnerHelpers';
-import { ChibiRunner3D } from './ChibiRunner3D';
 import { CustomGlbRunner3D, type CustomGlbStatus } from './CustomGlbRunner3D';
 import { RealisticRunner3D } from './RealisticRunner3D';
 import { TerrainMap3D } from './TerrainMap3D';
@@ -59,63 +57,63 @@ function resolveLightingMood(
 const MOOD_PALETTES: Record<Exclude<LightingMood3D, 'auto'>, MoodPalette> = {
   morning: {
     keyColor: '#FFF7ED',
-    keyIntensity: 1.95,
+    keyIntensity: 2.05,
     keyPos: [160, 220, 120],
     hemiSky: '#E0F2FE',
     hemiGround: '#86EFAC',
-    hemiIntensity: 0.72,
+    hemiIntensity: 0.78,
     rimColor: '#FDE68A',
-    rimIntensity: 0.65,
+    rimIntensity: 0.7,
   },
   evening: {
     keyColor: '#FB923C',
-    keyIntensity: 1.9,
+    keyIntensity: 1.95,
     keyPos: [-220, 95, 140],
     hemiSky: '#FDBA74',
     hemiGround: '#431407',
-    hemiIntensity: 0.6,
+    hemiIntensity: 0.65,
     rimColor: '#F97316',
-    rimIntensity: 0.85,
+    rimIntensity: 0.9,
   },
   night: {
     keyColor: '#93C5FD',
-    keyIntensity: 1.05,
+    keyIntensity: 1.25,
     keyPos: [120, 200, -140],
     hemiSky: '#1E3A8A',
     hemiGround: '#020617',
-    hemiIntensity: 0.42,
+    hemiIntensity: 0.55,
     rimColor: '#38BDF8',
-    rimIntensity: 1.35,
+    rimIntensity: 1.45,
   },
   'city-park': {
     keyColor: '#FFFBEB',
-    keyIntensity: 1.85,
+    keyIntensity: 1.95,
     keyPos: [140, 240, 150],
     hemiSky: '#DBEAFE',
     hemiGround: '#94A3B8',
-    hemiIntensity: 0.78,
+    hemiIntensity: 0.85,
     rimColor: '#BAE6FD',
-    rimIntensity: 0.55,
+    rimIntensity: 0.65,
   },
   mountain: {
     keyColor: '#F8FAFC',
-    keyIntensity: 2.0,
+    keyIntensity: 2.05,
     keyPos: [180, 210, -110],
     hemiSky: '#E0F2FE',
     hemiGround: '#475569',
-    hemiIntensity: 0.7,
+    hemiIntensity: 0.76,
     rimColor: '#38BDF8',
-    rimIntensity: 0.6,
+    rimIntensity: 0.65,
   },
   'night-run': {
     keyColor: '#60A5FA',
-    keyIntensity: 1.0,
+    keyIntensity: 1.25,
     keyPos: [100, 190, 130],
     hemiSky: '#1E1B4B',
     hemiGround: '#020617',
-    hemiIntensity: 0.44,
+    hemiIntensity: 0.58,
     rimColor: '#F97316',
-    rimIntensity: 1.5,
+    rimIntensity: 1.55,
   },
 };
 
@@ -209,7 +207,6 @@ const SceneContent: React.FC<
     };
   }, [gl, scene]);
 
-  // Flat Y=0 grounded path matching MapLibre GL planar ground
   const groundedPath = useMemo(
     () => buildGroundedRoutePath(track.points, () => 0, { heightOffsetM: 0.08 }),
     [track],
@@ -223,13 +220,14 @@ const SceneContent: React.FC<
 
   const characterSizeFactor =
     runner.characterSize === 'small'
-      ? 0.55
+      ? 0.72
       : runner.characterSize === 'large'
-        ? 1.18
-        : 0.82;
+        ? 1.45
+        : 1.05;
 
+  // Skala atlet proporsional terhadap ketinggian kamera drone agar selalu jelas terlihat
   const runnerScale = useMemo(
-    () => Math.max(1.9, Math.min(11.0, track.spanMeters * 0.0056 * characterSizeFactor)),
+    () => Math.max(4.8, Math.min(18.0, track.spanMeters * 0.0095 * characterSizeFactor)),
     [track.spanMeters, characterSizeFactor],
   );
 
@@ -238,12 +236,23 @@ const SceneContent: React.FC<
     return { runnerPos: sampled.position, runnerYaw: sampled.yawRad };
   }, [groundedPath, routeProgress]);
 
+  const effectiveRunnerConfig = useMemo<RunnerConfig>(() => {
+    if (runner.characterStyle === 'trail-pro') {
+      return {
+        ...runner,
+        accessory: runner.accessory === 'none' ? 'trail-vest' : runner.accessory,
+      };
+    }
+    return runner;
+  }, [runner]);
+
   const camTargetPosRef = useRef(new THREE.Vector3());
   const camLookTargetRef = useRef(new THREE.Vector3());
   const smoothLookAtRef = useRef(new THREE.Vector3(runnerPos.x, runnerPos.y, runnerPos.z));
   const initializedCamRef = useRef(false);
   const prevScrubProgressRef = useRef(timelineProgress);
   const prevModeRef = useRef(mapConfig.cameraMode);
+  const prevBuildings3dRef = useRef(mapConfig.buildings3d);
 
   useEffect(() => {
     initializedCamRef.current = false;
@@ -259,14 +268,30 @@ const SceneContent: React.FC<
     );
 
     const zoom = THREE.MathUtils.clamp(mapConfig.cameraZoom ?? 1.0, 0.5, 2.5);
-    const visualHeight = Math.max(10, runnerScale * 1.85);
+    const visualHeight = Math.max(12, runnerScale * 1.9);
 
-    const overviewHeight = Math.max(165, Math.min(920, track.spanMeters * 0.68)) * zoom;
-    const overviewDist = Math.max(135, Math.min(720, track.spanMeters * 0.52)) * zoom;
-    const droneHeight = Math.max(46, Math.min(115, track.spanMeters * 0.062)) * zoom;
-    const droneBackDist = droneHeight * 0.54;
+    const overviewHeight = Math.max(150, Math.min(820, track.spanMeters * 0.62)) * zoom;
+    const overviewDist = Math.max(120, Math.min(640, track.spanMeters * 0.48)) * zoom;
+    const droneHeight = Math.max(36, Math.min(92, track.spanMeters * 0.048)) * zoom;
+    const droneBackDist = droneHeight * 0.72;
 
-    if (effectiveMode === 'overview') {
+    if (!mapConfig.buildings3d && effectiveMode !== 'finish-pose') {
+      // Mode 3D OFF -> Kamera top-down 2D datar di atas pelari
+      const flatHeight =
+        (effectiveMode === 'overview'
+          ? overviewHeight
+          : Math.max(68, Math.min(180, track.spanMeters * 0.095))) * zoom;
+      camTargetPosRef.current.set(
+        effectiveMode === 'overview' ? 0 : runnerPos.x,
+        flatHeight,
+        (effectiveMode === 'overview' ? 0 : runnerPos.z) + 0.5,
+      );
+      camLookTargetRef.current.set(
+        effectiveMode === 'overview' ? 0 : runnerPos.x,
+        0,
+        effectiveMode === 'overview' ? 0 : runnerPos.z,
+      );
+    } else if (effectiveMode === 'overview') {
       const orbitAngle =
         mapConfig.cameraMode === 'auto'
           ? -0.45 + (timelineProgress / 0.08) * 0.35
@@ -278,41 +303,41 @@ const SceneContent: React.FC<
       );
       camLookTargetRef.current.set(0, 0, 0);
     } else if (effectiveMode === 'follow-chase') {
-      const chaseHeight = Math.max(46, visualHeight * 4.4) * zoom;
-      const chaseBackDist = chaseHeight * 0.62;
-      const trailAngle = runnerYaw + Math.PI * 0.95;
+      const chaseHeight = Math.max(24, visualHeight * 2.4) * zoom;
+      const chaseBackDist = chaseHeight * 1.15;
+      const trailAngle = runnerYaw + Math.PI * 0.94;
       const camX = runnerPos.x + Math.sin(trailAngle) * chaseBackDist;
       const camZ = runnerPos.z + Math.cos(trailAngle) * chaseBackDist;
       camTargetPosRef.current.set(camX, Math.max(runnerPos.y + chaseHeight, 8), camZ);
       camLookTargetRef.current.set(
-        runnerPos.x + Math.sin(runnerYaw) * (runnerScale * 3.8),
-        runnerPos.y + runnerScale * 0.4,
-        runnerPos.z + Math.cos(runnerYaw) * (runnerScale * 3.8),
+        runnerPos.x + Math.sin(runnerYaw) * (runnerScale * 2.8),
+        runnerPos.y + runnerScale * 0.95,
+        runnerPos.z + Math.cos(runnerYaw) * (runnerScale * 2.8),
       );
     } else if (effectiveMode === 'birds-eye') {
       const birdsHeight =
-        Math.max(95, Math.min(270, Math.max(visualHeight * 10.5, track.spanMeters * 0.14))) * zoom;
-      const birdsBackDist = birdsHeight * 0.19;
+        Math.max(85, Math.min(240, Math.max(visualHeight * 8.5, track.spanMeters * 0.12))) * zoom;
+      const birdsBackDist = birdsHeight * 0.24;
       const trailAngle = runnerYaw + Math.PI * 0.92;
       const camX = runnerPos.x + Math.sin(trailAngle) * birdsBackDist;
       const camZ = runnerPos.z + Math.cos(trailAngle) * birdsBackDist;
       camTargetPosRef.current.set(camX, Math.max(runnerPos.y + birdsHeight, 12), camZ);
       camLookTargetRef.current.set(
-        runnerPos.x + Math.sin(runnerYaw) * (runnerScale * 2.2),
-        runnerPos.y + runnerScale * 0.4,
-        runnerPos.z + Math.cos(runnerYaw) * (runnerScale * 2.2),
+        runnerPos.x + Math.sin(runnerYaw) * (runnerScale * 1.8),
+        runnerPos.y + runnerScale * 0.6,
+        runnerPos.z + Math.cos(runnerYaw) * (runnerScale * 1.8),
       );
     } else if (effectiveMode === 'drone-180') {
       const orbitSweep =
         Math.sin(timelineProgress * Math.PI * 2.5 + state.clock.elapsedTime * 0.22) *
         (Math.PI * 0.5);
       const orbitAngle = runnerYaw + Math.PI * 0.5 + orbitSweep;
-      const orbitDist = Math.max(visualHeight * 3.6, Math.min(82, track.spanMeters * 0.052)) * zoom;
-      const orbitHeight = Math.max(visualHeight * 2.0, Math.min(44, track.spanMeters * 0.028)) * zoom;
+      const orbitDist = Math.max(visualHeight * 2.8, Math.min(68, track.spanMeters * 0.042)) * zoom;
+      const orbitHeight = Math.max(visualHeight * 1.8, Math.min(38, track.spanMeters * 0.025)) * zoom;
       const camX = runnerPos.x + Math.sin(orbitAngle) * orbitDist;
       const camZ = runnerPos.z + Math.cos(orbitAngle) * orbitDist;
       camTargetPosRef.current.set(camX, Math.max(runnerPos.y + orbitHeight, 6), camZ);
-      camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 0.95, runnerPos.z);
+      camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 1.0, runnerPos.z);
     } else if (effectiveMode === 'follow-20m') {
       const baseAngle =
         mapConfig.camera20mAngle === 'front'
@@ -322,33 +347,33 @@ const SceneContent: React.FC<
             : mapConfig.camera20mAngle === 'orbit'
               ? runnerYaw + Math.PI + timelineProgress * Math.PI * 4 + state.clock.elapsedTime * 0.45
               : runnerYaw + Math.PI;
-      const horizDist = Math.max(36, visualHeight * 4.6) * zoom;
-      const aerialHeight = Math.max(28, visualHeight * 3.8) * zoom;
+      const horizDist = Math.max(28, visualHeight * 3.4) * zoom;
+      const aerialHeight = Math.max(22, visualHeight * 2.8) * zoom;
       const camX = runnerPos.x + Math.sin(baseAngle) * horizDist;
       const camZ = runnerPos.z + Math.cos(baseAngle) * horizDist;
       camTargetPosRef.current.set(camX, Math.max(runnerPos.y + aerialHeight, 8), camZ);
-      camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 0.8, runnerPos.z);
+      camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 0.9, runnerPos.z);
     } else if (effectiveMode === 'finish-pose') {
       const finishZoom = THREE.MathUtils.clamp(zoom, 0.75, 1.55);
       const orbitOffset = Math.sin(state.clock.elapsedTime * 0.65) * 0.12;
       const frontAngle = runnerYaw + orbitOffset;
-      const heroDist = runnerScale * 8.2 * finishZoom;
-      const heroHeight = runnerScale * 2.55 * finishZoom;
+      const heroDist = runnerScale * 6.5 * finishZoom;
+      const heroHeight = runnerScale * 2.2 * finishZoom;
       camTargetPosRef.current.set(
         runnerPos.x + Math.sin(frontAngle) * heroDist,
         runnerPos.y + heroHeight,
         runnerPos.z + Math.cos(frontAngle) * heroDist,
       );
-      camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 1.68, runnerPos.z);
+      camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 1.45, runnerPos.z);
     } else {
-      const trailAngle = runnerYaw + Math.PI * 0.86;
+      const trailAngle = runnerYaw + Math.PI * 0.88;
       const camX = runnerPos.x + Math.sin(trailAngle) * droneBackDist;
       const camZ = runnerPos.z + Math.cos(trailAngle) * droneBackDist;
       camTargetPosRef.current.set(camX, Math.max(runnerPos.y + droneHeight, 8), camZ);
       camLookTargetRef.current.set(
-        runnerPos.x + Math.sin(runnerYaw) * (runnerScale * 2.2),
-        runnerPos.y + runnerScale * 0.75,
-        runnerPos.z + Math.cos(runnerYaw) * (runnerScale * 2.2),
+        runnerPos.x + Math.sin(runnerYaw) * (runnerScale * 1.8),
+        runnerPos.y + runnerScale * 0.9,
+        runnerPos.z + Math.cos(runnerYaw) * (runnerScale * 1.8),
       );
     }
 
@@ -364,9 +389,11 @@ const SceneContent: React.FC<
     const jumpedWhilePaused =
       !isPlaying &&
       (Math.abs(timelineProgress - prevScrubProgressRef.current) > 0.08 ||
-        mapConfig.cameraMode !== prevModeRef.current);
+        mapConfig.cameraMode !== prevModeRef.current ||
+        mapConfig.buildings3d !== prevBuildings3dRef.current);
     prevScrubProgressRef.current = timelineProgress;
     prevModeRef.current = mapConfig.cameraMode;
+    prevBuildings3dRef.current = mapConfig.buildings3d;
 
     if (!initializedCamRef.current || jumpedWhilePaused) {
       camera.position.copy(camTargetPosRef.current);
@@ -446,9 +473,21 @@ const SceneContent: React.FC<
         onMapLoadStatus={onMapLoadStatus}
       />
 
+      {/* Beacon ring di bawah kaki pelari agar posisi atlet selalu jelas di atas jalan */}
+      <group position={[runnerPos.x, runnerPos.y + 0.08, runnerPos.z]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[runnerScale * 0.52, runnerScale * 0.78, 32]} />
+          <meshBasicMaterial color={runner.jerseyColor} transparent opacity={0.85} side={THREE.DoubleSide} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+          <circleGeometry args={[runnerScale * 0.52, 32]} />
+          <meshBasicMaterial color="#0F172A" transparent opacity={0.32} />
+        </mesh>
+      </group>
+
       {runner.characterStyle === 'custom-glb' && runner.customModelUrl ? (
         <CustomGlbRunner3D
-          config={runner}
+          config={effectiveRunnerConfig}
           position={runnerPos}
           yawRad={runnerYaw}
           scale={runnerScale}
@@ -461,24 +500,9 @@ const SceneContent: React.FC<
           timelineProgress={timelineProgress}
           onStatusChange={onCustomModelStatus}
         />
-      ) : runner.characterStyle === 'realistic' || runner.characterStyle === 'custom-glb' ? (
-        <RealisticRunner3D
-          config={runner}
-          position={runnerPos}
-          yawRad={runnerYaw}
-          scale={runnerScale}
-          cadenceSpm={currentCadence}
-          paceSecPerKm={currentPaceSec}
-          isPlaying={isPlaying}
-          isFinishPose={isFinishPhase}
-          includeFinishPose={includeFinishPose}
-          isManualFinishCamera={mapConfig.cameraMode === 'finish-pose'}
-          timelineProgress={timelineProgress}
-          isNightMood={isNightMood}
-        />
       ) : (
-        <ChibiRunner3D
-          config={runner}
+        <RealisticRunner3D
+          config={effectiveRunnerConfig}
           position={runnerPos}
           yawRad={runnerYaw}
           scale={runnerScale}
@@ -516,14 +540,12 @@ export const Studio3DCanvas: React.FC<Studio3DCanvasProps> = (props) => {
         </div>
       ) : (
         <div className="relative w-full h-full">
-          {/* Layer Bawah: MapLibre GL OpenFreeMap */}
           <div
             ref={setMapContainer}
             id="map"
             className="absolute inset-0 w-full h-full"
           />
 
-          {/* Layer Atas: Three.js Avatar & Route Ribbon Transparan */}
           <div className="relative w-full h-full pointer-events-none">
             <Canvas
               shadows={!isSoftwareGl}

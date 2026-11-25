@@ -4,8 +4,6 @@ import { PublicStudio3DHeader } from './components/studio3d/PublicStudio3DHeader
 import type { Language } from './utils/i18n';
 import type { RunLog } from './types';
 
-const MAIN_APP_URL = import.meta.env.VITE_MAIN_APP_URL || 'https://sportbyte.vercel.app';
-
 function getInitialTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'dark';
   const stored = window.localStorage.getItem('sportbyte3d_theme');
@@ -23,8 +21,8 @@ function getInitialLang(): Language {
 export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme);
   const [lang, setLang] = useState<Language>(getInitialLang);
-  // Guest mode: empty runs → user uploads GPX/FIT or uses built-in sample inside Studio3DView
   const [runs] = useState<RunLog[]>([]);
+  const [uploadTick, setUploadTick] = useState(0);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -43,12 +41,8 @@ export default function App() {
     setLang(next);
   }, []);
 
-  const goHome = useCallback(() => {
-    window.location.href = MAIN_APP_URL;
-  }, []);
-
-  const openMainApp = useCallback(() => {
-    window.open(MAIN_APP_URL, '_blank', 'noopener,noreferrer');
+  const triggerUpload = useCallback(() => {
+    setUploadTick((n) => n + 1);
   }, []);
 
   return (
@@ -58,15 +52,14 @@ export default function App() {
         lang={lang}
         onToggleTheme={toggleTheme}
         onChangeLang={changeLang}
-        onGoHome={goHome}
-        onSignIn={openMainApp}
+        onTriggerUpload={triggerUpload}
       />
       <main className="flex-1 flex flex-col min-h-0">
         <Studio3DView
           runs={runs}
           lang={lang}
           isGuest={true}
-          onRequestSignIn={openMainApp}
+          externalUploadTrigger={uploadTick}
         />
       </main>
     </div>
