@@ -539,14 +539,17 @@ export const Studio3DCanvas: React.FC<Studio3DCanvasProps> = (props) => {
           </button>
         </div>
       ) : (
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full overflow-hidden">
           <div
             ref={setMapContainer}
             id="map"
-            className="absolute inset-0 w-full h-full"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1 }}
           />
 
-          <div className="relative w-full h-full pointer-events-none">
+          <div
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 10 }}
+            className="pointer-events-none"
+          >
             <Canvas
               shadows={!isSoftwareGl}
               dpr={isSoftwareGl ? 1 : [1, 2]}

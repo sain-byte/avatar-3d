@@ -164,6 +164,78 @@ const LandmarkMarker3D: React.FC<{
   );
 };
 
+
+function syncRouteLayersOnMap(
+  map: maplibregl.Map,
+  track: Studio3DTrack,
+  routeProgress: number,
+  jerseyColor: string,
+  routeStyle: RouteVisualStyle3D,
+) {
+  if (!map.isStyleLoaded() || track.points.length < 2) return;
+
+  const fullCoords = track.points.map((p) => [p.lon, p.lat]);
+  const activeCount = Math.max(
+    2,
+    Math.min(fullCoords.length, Math.ceil(routeProgress * (fullCoords.length - 1)) + 1),
+  );
+  const activeCoords = routeProgress <= 0.002 ? [] : fullCoords.slice(0, activeCount);
+
+  const activeColor =
+    routeStyle === 'sportbyte-lime'
+      ? '#A6F04B'
+      : routeStyle === 'google-maps'
+        ? '#1A73E8'
+        : jerseyColor || '#F97316';
+
+  const fullGeo: GeoJSON.Feature<GeoJSON.LineString> = {
+    type: 'Feature',
+    properties: {},
+    geometry: { type: 'LineString', coordinates: fullCoords },
+  };
+  const activeGeo: GeoJSON.Feature<GeoJSON.LineString> = {
+    type: 'Feature',
+    properties: {},
+    geometry: { type: 'LineString', coordinates: activeCoords },
+  };
+
+  const fullSrc = map.getSource('gpx-route-full') as maplibregl.GeoJSONSource | undefined;
+  if (fullSrc) {
+    fullSrc.setData(fullGeo);
+  } else {
+    map.addSource('gpx-route-full', { type: 'geojson', data: fullGeo });
+    map.addLayer({
+      id: 'gpx-route-casing',
+      type: 'line',
+      source: 'gpx-route-full',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#0F172A', 'line-width': 9, 'line-opacity': 0.85 },
+    });
+    map.addLayer({
+      id: 'gpx-route-base',
+      type: 'line',
+      source: 'gpx-route-full',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#93C5FD', 'line-width': 5, 'line-opacity': 0.9 },
+    });
+  }
+
+  const activeSrc = map.getSource('gpx-route-active') as maplibregl.GeoJSONSource | undefined;
+  if (activeSrc) {
+    activeSrc.setData(activeGeo);
+    map.setPaintProperty('gpx-route-active', 'line-color', activeColor);
+  } else {
+    map.addSource('gpx-route-active', { type: 'geojson', data: activeGeo });
+    map.addLayer({
+      id: 'gpx-route-active',
+      type: 'line',
+      source: 'gpx-route-active',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': activeColor, 'line-width': 6.5, 'line-opacity': 1 },
+    });
+  }
+}
+
 function add3DBuildingsToMap(map: maplibregl.Map, mode: MapMode3D, enabled: boolean) {
   if (!enabled) {
     if (map.getLayer('3d-buildings')) {
@@ -252,6 +324,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
 
     const handleLoad = () => {
       add3DBuildingsToMap(map, currentModeRef.current, buildings3dRef.current);
+      syncRouteLayersOnMap(map, track, routeProgress, jerseyColor, routeStyle);
       onMapLoadStatus?.({
         phase: 'ready',
         loadedTiles: 1,
@@ -293,6 +366,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    syncRouteLayersOnMap(map, track, routeProgress, jerseyColor, routeStyle);
 
     onMapLoadStatus?.({
       phase: 'loading',
@@ -305,6 +379,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     map.setStyle(MAP_STYLES[mapStyle]);
     map.once('style.load', () => {
       add3DBuildingsToMap(map, mapStyle, buildings3dRef.current);
+      syncRouteLayersOnMap(map, track, routeProgress, jerseyColor, routeStyle);
       onMapLoadStatus?.({
         phase: 'ready',
         loadedTiles: 1,
@@ -325,6 +400,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
   useFrame(() => {
     const map = mapRef.current;
     if (!map) return;
+    syncRouteLayersOnMap(map, track, routeProgress, jerseyColor, routeStyle);
 
     const fwd = forwardVecRef.current;
     camera.getWorldDirection(fwd);
