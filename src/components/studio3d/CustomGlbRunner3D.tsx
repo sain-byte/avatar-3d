@@ -128,7 +128,21 @@ function prepareSeamlessRunClip(rawClip: THREE.AnimationClip): THREE.AnimationCl
   }
 
   if (lastActiveTime >= 0.25 && lastActiveTime < clip.duration - 0.03) {
-    clip.trim(0, lastActiveTime);
+    for (const track of clip.tracks) {
+      const times = track.times;
+      const values = track.values;
+      const stride = track.getValueSize();
+      if (!times || times.length < 2 || stride <= 0) continue;
+
+      let keepCount = 0;
+      while (keepCount < times.length && times[keepCount] <= lastActiveTime + 1e-4) {
+        keepCount += 1;
+      }
+      if (keepCount >= 2 && keepCount < times.length) {
+        track.times = times.slice(0, keepCount);
+        track.values = values.slice(0, keepCount * stride);
+      }
+    }
     clip.duration = lastActiveTime;
   }
   return clip;
