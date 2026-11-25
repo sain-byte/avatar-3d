@@ -20,7 +20,7 @@ import {
 interface RealisticRunner3DProps {
   config: RunnerConfig;
   position: THREE.Vector3;
-  yawRad: number;
+  yawRef: React.MutableRefObject<number>;
   scale: number;
   cadenceSpm: number;
   paceSecPerKm: number;
@@ -39,7 +39,7 @@ interface RealisticRunner3DProps {
 export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
   config,
   position,
-  yawRad,
+  yawRef,
   scale,
   cadenceSpm,
   paceSecPerKm,
@@ -67,7 +67,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
   const rightAnkleRef = useRef<THREE.Group>(null);
   const ponytailRef = useRef<THREE.Group>(null);
   const confettiRef = useRef<THREE.InstancedMesh>(null);
-  const prevYawRef = useRef(yawRad);
+  const prevYawRef = useRef(yawRef.current);
   const runClockRef = useRef(0);
   const finishBlendRef = useRef(isFinishPose ? 1 : 0);
   const prevScrubRef = useRef(timelineProgress);
@@ -102,13 +102,14 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
     rootRef.current.position.copy(position);
     rootRef.current.scale.setScalar(scale);
 
-    let yawDiff = yawRad - prevYawRef.current;
+    const currentYaw = yawRef.current;
+    let yawDiff = currentYaw - prevYawRef.current;
     while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
     while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
-    prevYawRef.current = yawRad;
+    prevYawRef.current = currentYaw;
     const turnLean = THREE.MathUtils.clamp(yawDiff * 3.0, -0.18, 0.18);
 
-    rootRef.current.rotation.y = yawRad;
+    rootRef.current.rotation.y = currentYaw;
 
     const gait = resolveGaitProfile(config.gaitMode ?? 'auto', paceSecPerKm, cadenceSpm);
     const targetFinishBlend = Math.max(

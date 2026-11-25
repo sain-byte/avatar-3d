@@ -37,7 +37,7 @@ export interface CustomGlbStatus {
 interface CustomGlbRunner3DProps {
   config: RunnerConfig;
   position: THREE.Vector3;
-  yawRad: number;
+  yawRef: React.MutableRefObject<number>;
   scale: number;
   cadenceSpm: number;
   paceSecPerKm: number;
@@ -95,7 +95,7 @@ function pickClip(clips: THREE.AnimationClip[], pattern: RegExp): THREE.Animatio
 export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
   config,
   position,
-  yawRad,
+  yawRef,
   scale,
   cadenceSpm,
   paceSecPerKm,
@@ -132,7 +132,7 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
   });
   const rigModeRef = useRef<'clip' | 'bones' | 'static'>('static');
   const runClockRef = useRef(0);
-  const prevYawRef = useRef(yawRad);
+  const prevYawRef = useRef(yawRef.current);
   const finishBlendRef = useRef(isFinishPose ? 1 : 0);
   const prevScrubRef = useRef(timelineProgress);
   const prevPoseStyleRef = useRef(config.finishPoseStyle ?? 'celebrate-jump');
@@ -450,12 +450,13 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
 
     rootRef.current.position.copy(position);
     rootRef.current.scale.setScalar(scale);
-    rootRef.current.rotation.y = yawRad;
+    const currentYaw = yawRef.current;
+    rootRef.current.rotation.y = currentYaw;
 
-    let yawDiff = yawRad - prevYawRef.current;
+    let yawDiff = currentYaw - prevYawRef.current;
     while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
     while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
-    prevYawRef.current = yawRad;
+    prevYawRef.current = currentYaw;
     const turnLeanRoll = THREE.MathUtils.clamp(yawDiff * 3.0, -0.18, 0.18);
 
     if (flipMountRef.current) {

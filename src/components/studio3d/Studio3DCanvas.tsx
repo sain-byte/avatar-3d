@@ -237,7 +237,7 @@ const SceneContent: React.FC<
   }, [groundedPath, routeProgress]);
 
   const smoothYawRef = useRef<number>(rawRunnerYaw);
-  const [runnerYaw, setRunnerYaw] = useState<number>(rawRunnerYaw);
+  const rimLightRef = useRef<THREE.DirectionalLight>(null);
 
   const effectiveRunnerConfig = useMemo<RunnerConfig>(() => {
     if (runner.characterStyle === 'trail-pro') {
@@ -273,10 +273,6 @@ const SceneContent: React.FC<
       while (diff < -Math.PI) diff += Math.PI * 2;
       smoothYawRef.current += diff * (1 - Math.exp(-4.2 * dt));
     }
-    if (Math.abs(smoothYawRef.current - runnerYaw) > 0.0025) {
-      setRunnerYaw(smoothYawRef.current);
-    }
-
     const effectiveMode = resolveEffectiveCameraMode(
       mapConfig.cameraMode,
       timelineProgress,
@@ -444,12 +440,28 @@ const SceneContent: React.FC<
       keyLightRef.current.target.position.copy(runnerPos);
       keyLightRef.current.target.updateMatrixWorld();
     }
+    if (rimLightRef.current) {
+      const backAngle = smoothYawRef.current + Math.PI;
+      rimLightRef.current.position.set(
+        runnerPos.x + Math.sin(backAngle) * 35,
+        runnerPos.y + 28,
+        runnerPos.z + Math.cos(backAngle) * 35,
+      );
+      rimLightRef.current.target.position.copy(runnerPos);
+      rimLightRef.current.target.updateMatrixWorld();
+    }
   });
 
   return (
     <>
       <hemisphereLight args={[mood.hemiSky, mood.hemiGround, mood.hemiIntensity]} />
 
+      <directionalLight
+        ref={rimLightRef}
+        color="#E0F2FE"
+        intensity={0.95}
+        position={[0, 30, -30]}
+      />
       <directionalLight
         ref={keyLightRef}
         color={mood.keyColor}
@@ -497,8 +509,8 @@ const SceneContent: React.FC<
           <meshBasicMaterial color={mapConfig.overlayColor ?? '#F97316'} transparent opacity={0.85} side={THREE.DoubleSide} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-          <circleGeometry args={[runnerScale * 0.52, 32]} />
-          <meshBasicMaterial color="#0F172A" transparent opacity={0.32} />
+          <circleGeometry args={[runnerScale * 0.54, 32]} />
+          <meshBasicMaterial color="#090D16" transparent opacity={0.55} />
         </mesh>
       </group>
 
@@ -506,7 +518,7 @@ const SceneContent: React.FC<
         <CustomGlbRunner3D
           config={effectiveRunnerConfig}
           position={runnerPos}
-          yawRad={runnerYaw}
+          yawRef={smoothYawRef}
           scale={runnerScale}
           cadenceSpm={currentCadence}
           paceSecPerKm={currentPaceSec}
@@ -521,7 +533,7 @@ const SceneContent: React.FC<
         <RealisticRunner3D
           config={effectiveRunnerConfig}
           position={runnerPos}
-          yawRad={runnerYaw}
+          yawRef={smoothYawRef}
           scale={runnerScale}
           cadenceSpm={currentCadence}
           paceSecPerKm={currentPaceSec}
