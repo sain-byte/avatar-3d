@@ -97,138 +97,6 @@ function createLandmarkSpriteTexture(
   return tex;
 }
 
-function buildRibbonGeometry(
-  verts: Array<{ x: number; z: number; distM: number }>,
-  maxDistM: number,
-  halfWidth: number,
-  yOffset: number,
-): THREE.BufferGeometry {
-  const geo = new THREE.BufferGeometry();
-  if (verts.length < 2 || maxDistM <= 0.01) return geo;
-
-  const pts: Array<{ x: number; z: number }> = [{ x: verts[0].x, z: verts[0].z }];
-  for (let i = 1; i < verts.length; i += 1) {
-    const prev = verts[i - 1];
-    const curr = verts[i];
-    if (curr.distM <= maxDistM) {
-      pts.push({ x: curr.x, z: curr.z });
-    } else {
-      const segLen = Math.max(1e-5, curr.distM - prev.distM);
-      const t = Math.max(0, Math.min(1, (maxDistM - prev.distM) / segLen));
-      pts.push({
-        x: prev.x + (curr.x - prev.x) * t,
-        z: prev.z + (curr.z - prev.z) * t,
-      });
-      break;
-    }
-  }
-
-  if (pts.length < 2) return geo;
-
-  const positions = new Float32Array(pts.length * 2 * 3);
-  const indices: number[] = [];
-
-  for (let i = 0; i < pts.length; i += 1) {
-    const pPrev = pts[Math.max(0, i - 1)];
-    const pNext = pts[Math.min(pts.length - 1, i + 1)];
-    let dx = pNext.x - pPrev.x;
-    let dz = pNext.z - pPrev.z;
-    const len = Math.hypot(dx, dz) || 1;
-    dx /= len;
-    dz /= len;
-    const nx = -dz;
-    const nz = dx;
-
-    const baseIdx = i * 6;
-    positions[baseIdx] = pts[i].x + nx * halfWidth;
-    positions[baseIdx + 1] = yOffset;
-    positions[baseIdx + 2] = pts[i].z + nz * halfWidth;
-
-    positions[baseIdx + 3] = pts[i].x - nx * halfWidth;
-    positions[baseIdx + 4] = yOffset;
-    positions[baseIdx + 5] = pts[i].z - nz * halfWidth;
-
-    if (i < pts.length - 1) {
-      const v0 = i * 2;
-      const v1 = v0 + 1;
-      const v2 = v0 + 2;
-      const v3 = v0 + 3;
-      indices.push(v0, v2, v1, v1, v2, v3);
-    }
-  }
-
-  geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  geo.setIndex(indices);
-  return geo;
-}
-
-const GroundedRoute3D: React.FC<{
-  groundedPath: GroundedRoutePath;
-  routeProgress: number;
-  accentColor: string;
-  isDark: boolean;
-  showRouteGlow: boolean;
-  ribbonWidth: number;
-}> = ({ groundedPath, routeProgress, accentColor, isDark, showRouteGlow, ribbonWidth }) => {
-  const baseGeo = useMemo(
-    () => buildRibbonGeometry(groundedPath.vertices, groundedPath.totalArcMeters, ribbonWidth * 0.62, 0.03),
-    [groundedPath, ribbonWidth],
-  );
-  useEffect(() => () => baseGeo.dispose(), [baseGeo]);
-
-  const activeDistM = Math.max(0, Math.min(groundedPath.totalArcMeters, routeProgress * groundedPath.totalArcMeters));
-
-  const activeGeo = useMemo(
-    () => buildRibbonGeometry(groundedPath.vertices, activeDistM, ribbonWidth, 0.05),
-    [groundedPath, activeDistM, ribbonWidth],
-  );
-  useEffect(() => () => activeGeo.dispose(), [activeGeo]);
-
-  const glowGeo = useMemo(
-    () => (showRouteGlow ? buildRibbonGeometry(groundedPath.vertices, activeDistM, ribbonWidth * 2.4, 0.04) : null),
-    [groundedPath, activeDistM, ribbonWidth, showRouteGlow],
-  );
-  useEffect(() => () => glowGeo?.dispose(), [glowGeo]);
-
-  return (
-    <group name="GroundedRoute3DRibbon">
-      {groundedPath.vertices.length >= 2 && (
-        <mesh geometry={baseGeo} renderOrder={2}>
-          <meshBasicMaterial
-            color={isDark ? "#94A3B8" : "#475569"}
-            transparent
-            opacity={isDark ? 0.34 : 0.26}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-          />
-        </mesh>
-      )}
-      {showRouteGlow && glowGeo && activeDistM > 0.2 && (
-        <mesh geometry={glowGeo} renderOrder={3}>
-          <meshBasicMaterial
-            color={accentColor}
-            transparent
-            opacity={0.32}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-          />
-        </mesh>
-      )}
-      {activeDistM > 0.2 && (
-        <mesh geometry={activeGeo} renderOrder={4}>
-          <meshBasicMaterial
-            color={accentColor}
-            transparent
-            opacity={0.96}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-          />
-        </mesh>
-      )}
-    </group>
-  );
-};
-
 const LandmarkMarker3D: React.FC<{
   landmark: Studio3DLandmark;
   position: THREE.Vector3;
@@ -394,6 +262,138 @@ function
     });
   }
 }
+
+function buildRibbonGeometry(
+  verts: Array<{ x: number; z: number; distM: number }>,
+  maxDistM: number,
+  halfWidth: number,
+  yOffset: number,
+): THREE.BufferGeometry {
+  const geo = new THREE.BufferGeometry();
+  if (verts.length < 2 || maxDistM <= 0.01) return geo;
+
+  const pts: Array<{ x: number; z: number }> = [{ x: verts[0].x, z: verts[0].z }];
+  for (let i = 1; i < verts.length; i += 1) {
+    const prev = verts[i - 1];
+    const curr = verts[i];
+    if (curr.distM <= maxDistM) {
+      pts.push({ x: curr.x, z: curr.z });
+    } else {
+      const segLen = Math.max(1e-5, curr.distM - prev.distM);
+      const t = Math.max(0, Math.min(1, (maxDistM - prev.distM) / segLen));
+      pts.push({
+        x: prev.x + (curr.x - prev.x) * t,
+        z: prev.z + (curr.z - prev.z) * t,
+      });
+      break;
+    }
+  }
+
+  if (pts.length < 2) return geo;
+
+  const positions = new Float32Array(pts.length * 2 * 3);
+  const indices: number[] = [];
+
+  for (let i = 0; i < pts.length; i += 1) {
+    const pPrev = pts[Math.max(0, i - 1)];
+    const pNext = pts[Math.min(pts.length - 1, i + 1)];
+    let dx = pNext.x - pPrev.x;
+    let dz = pNext.z - pPrev.z;
+    const len = Math.hypot(dx, dz) || 1;
+    dx /= len;
+    dz /= len;
+    const nx = -dz;
+    const nz = dx;
+
+    const baseIdx = i * 6;
+    positions[baseIdx] = pts[i].x + nx * halfWidth;
+    positions[baseIdx + 1] = yOffset;
+    positions[baseIdx + 2] = pts[i].z + nz * halfWidth;
+
+    positions[baseIdx + 3] = pts[i].x - nx * halfWidth;
+    positions[baseIdx + 4] = yOffset;
+    positions[baseIdx + 5] = pts[i].z - nz * halfWidth;
+
+    if (i < pts.length - 1) {
+      const v0 = i * 2;
+      const v1 = v0 + 1;
+      const v2 = v0 + 2;
+      const v3 = v0 + 3;
+      indices.push(v0, v2, v1, v1, v2, v3);
+    }
+  }
+
+  geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geo.setIndex(indices);
+  return geo;
+}
+
+const GroundedRoute3D: React.FC<{
+  groundedPath: GroundedRoutePath;
+  routeProgress: number;
+  accentColor: string;
+  isDark: boolean;
+  showRouteGlow: boolean;
+  ribbonWidth: number;
+}> = ({ groundedPath, routeProgress, accentColor, isDark, showRouteGlow, ribbonWidth }) => {
+  const baseGeo = useMemo(
+    () => buildRibbonGeometry(groundedPath.vertices, groundedPath.totalArcMeters, ribbonWidth * 0.62, 0.03),
+    [groundedPath, ribbonWidth],
+  );
+  useEffect(() => () => baseGeo.dispose(), [baseGeo]);
+
+  const activeDistM = Math.max(0, Math.min(groundedPath.totalArcMeters, routeProgress * groundedPath.totalArcMeters));
+
+  const activeGeo = useMemo(
+    () => buildRibbonGeometry(groundedPath.vertices, activeDistM, ribbonWidth, 0.05),
+    [groundedPath, activeDistM, ribbonWidth],
+  );
+  useEffect(() => () => activeGeo.dispose(), [activeGeo]);
+
+  const glowGeo = useMemo(
+    () => (showRouteGlow ? buildRibbonGeometry(groundedPath.vertices, activeDistM, ribbonWidth * 2.4, 0.04) : null),
+    [groundedPath, activeDistM, ribbonWidth, showRouteGlow],
+  );
+  useEffect(() => () => glowGeo?.dispose(), [glowGeo]);
+
+  return (
+    <group name="GroundedRoute3DRibbon">
+      {groundedPath.vertices.length >= 2 && (
+        <mesh geometry={baseGeo} renderOrder={2}>
+          <meshBasicMaterial
+            color={isDark ? "#94A3B8" : "#475569"}
+            transparent
+            opacity={isDark ? 0.34 : 0.26}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+      {showRouteGlow && glowGeo && activeDistM > 0.2 && (
+        <mesh geometry={glowGeo} renderOrder={3}>
+          <meshBasicMaterial
+            color={accentColor}
+            transparent
+            opacity={0.32}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+      {activeDistM > 0.2 && (
+        <mesh geometry={activeGeo} renderOrder={4}>
+          <meshBasicMaterial
+            color={accentColor}
+            transparent
+            opacity={0.96}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+    </group>
+  );
+};
 
 export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
   track,
