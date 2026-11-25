@@ -976,10 +976,11 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   />
                 </div>
 
-                {showOverlayPanel && (
                 <div
                   className="pointer-events-none absolute top-0 inset-x-0 pt-5 pb-2 px-3 z-10"
                   style={{
+                    opacity: showOverlayPanel ? 1 : 0,
+                    visibility: showOverlayPanel ? 'visible' : 'hidden',
                     color: useOverlayBox ? '#FFFFFF' : effectiveOverlayTextColor,
                     textShadow: useOverlayBox
                       ? '0 1px 3px rgba(0,0,0,0.85)'
@@ -1080,13 +1081,11 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   )}
                 </div>
 
-                </div>
-                )}
-
-                {showOverlayPanel && (
                 <div
                   className="pointer-events-none absolute bottom-0 inset-x-0 pb-3 px-3 z-10"
                   style={{
+                    opacity: showOverlayPanel ? 1 : 0,
+                    visibility: showOverlayPanel ? 'visible' : 'hidden',
                     color: useOverlayBox ? '#FFFFFF' : effectiveOverlayTextColor,
                     textShadow: useOverlayBox
                       ? '0 1px 3px rgba(0,0,0,0.85)'
@@ -1254,7 +1253,6 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                     </div>
                   )}
                 </div>
-                )}
 </>
             )}
           </div>
