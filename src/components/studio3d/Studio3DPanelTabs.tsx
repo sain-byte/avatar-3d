@@ -280,6 +280,42 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                         flip180: false,
                         animMode: "clip" as const,
                       },
+                      {
+                        label: "Pelari Cesium",
+                        url: "https://threejs.org/examples/models/gltf/CesiumMan/glTF/CesiumMan.gltf",
+                        flip180: false,
+                        animMode: "clip" as const,
+                      },
+                      {
+                        label: "Rubah Low-Poly",
+                        url: "https://threejs.org/examples/models/gltf/Fox/glTF/Fox.gltf",
+                        flip180: false,
+                        animMode: "clip" as const,
+                      },
+                      {
+                        label: "Kuda Pacu",
+                        url: "https://threejs.org/examples/models/gltf/Horse.glb",
+                        flip180: false,
+                        animMode: "clip" as const,
+                      },
+                      {
+                        label: "Flamingo",
+                        url: "https://threejs.org/examples/models/gltf/Flamingo.glb",
+                        flip180: false,
+                        animMode: "clip" as const,
+                      },
+                      {
+                        label: "Bangau Putih",
+                        url: "https://threejs.org/examples/models/gltf/Stork.glb",
+                        flip180: false,
+                        animMode: "clip" as const,
+                      },
+                      {
+                        label: "Nuri Warna",
+                        url: "https://threejs.org/examples/models/gltf/Parrot.glb",
+                        flip180: false,
+                        animMode: "clip" as const,
+                      },
                     ].map((preset) => {
                       const active = runner.customModelUrl === preset.url;
                       return (
