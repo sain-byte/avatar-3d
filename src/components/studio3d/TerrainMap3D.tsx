@@ -100,21 +100,33 @@ const LandmarkMarker3D: React.FC<{
   position: THREE.Vector3;
   scaleFactor: number;
   accentColor: string;
-}> = ({ landmark, position, scaleFactor, accentColor }) => {
+  passed: boolean;
+}> = ({ landmark, position, scaleFactor, accentColor, passed }) => {
+  const badgeColor =
+    landmark.type === "start" ? "#10B981" : landmark.type === "finish" ? "#F43F5E" : accentColor;
   const spriteTex = useMemo(
-    () => createLandmarkSpriteTexture(landmark, accentColor),
-    [landmark, accentColor],
+    () => createLandmarkSpriteTexture(landmark, badgeColor),
+    [landmark, badgeColor],
   );
   useEffect(() => () => spriteTex.dispose(), [spriteTex]);
 
   return (
-    <group position={[position.x, position.y, position.z]}>
+    <group position={[position.x, position.y + 0.05, position.z]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[scaleFactor * 0.32, scaleFactor * 0.62, 24]} />
+        <meshBasicMaterial
+          color={passed ? badgeColor : "#94A3B8"}
+          transparent
+          opacity={passed ? 0.9 : 0.45}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
       <mesh position={[0, scaleFactor * 1.1, 0]}>
         <cylinderGeometry args={[scaleFactor * 0.06, scaleFactor * 0.06, scaleFactor * 2.2, 8]} />
-        <meshStandardMaterial color="#FFFFFF" roughness={0.4} />
+        <meshStandardMaterial color={passed ? badgeColor : "#E2E8F0"} roughness={0.35} />
       </mesh>
       <sprite position={[0, scaleFactor * 3.4, 0]} scale={[scaleFactor * 5.8, scaleFactor * 2.0, 1]}>
-        <spriteMaterial map={spriteTex} transparent depthTest={false} />
+        <spriteMaterial map={spriteTex} transparent depthTest={false} opacity={passed ? 1 : 0.82} />
       </sprite>
     </group>
   );
@@ -199,7 +211,7 @@ function syncHairlineRouteOnMap(
     geometry: { type: 'LineString', coordinates: activeCoords },
   };
 
-  const baseColor = darkTheme ? 'rgba(255, 255, 255, 0.36)' : 'rgba(15, 23, 42, 0.24)';
+  const baseColor = darkTheme ? 'rgba(255, 255, 255, 0.28)' : 'rgba(15, 23, 42, 0.22)';
 
   const fullSrc = map.getSource('gpx-route-full') as maplibregl.GeoJSONSource | undefined;
   if (fullSrc) {
@@ -214,8 +226,9 @@ function syncHairlineRouteOnMap(
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: {
         'line-color': baseColor,
-        'line-width': 1.6,
-        'line-opacity': 0.85,
+        'line-width': 2.0,
+        'line-dasharray': [2, 2],
+        'line-opacity': 0.8,
       },
     });
   }
@@ -223,9 +236,24 @@ function syncHairlineRouteOnMap(
   const activeSrc = map.getSource('gpx-route-active') as maplibregl.GeoJSONSource | undefined;
   if (activeSrc) {
     activeSrc.setData(activeGeo);
+    if (map.getLayer('gpx-route-glow')) {
+      map.setPaintProperty('gpx-route-glow', 'line-color', accentColor);
+    }
     map.setPaintProperty('gpx-route-active', 'line-color', accentColor);
   } else {
     map.addSource('gpx-route-active', { type: 'geojson', data: activeGeo });
+    map.addLayer({
+      id: 'gpx-route-glow',
+      type: 'line',
+      source: 'gpx-route-active',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': accentColor,
+        'line-width': 9.5,
+        'line-blur': 4.5,
+        'line-opacity': 0.36,
+      },
+    });
     map.addLayer({
       id: 'gpx-route-active',
       type: 'line',
@@ -233,8 +261,8 @@ function syncHairlineRouteOnMap(
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: {
         'line-color': accentColor,
-        'line-width': 2.7,
-        'line-opacity': 0.96,
+        'line-width': 4.0,
+        'line-opacity': 0.98,
       },
     });
   }
@@ -429,7 +457,6 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
 
   const landmarkMarkers = useMemo(() => {
     return track.landmarks
-      .filter((lm) => lm.type !== 'start' && lm.type !== 'finish')
       .map((lm) => {
         const { position } = sampleGroundedRouteAtProgress(
           groundedPath,
@@ -455,6 +482,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
           position={item.position}
           scaleFactor={landmarkScale}
           accentColor={overlayColor}
+          passed={routeProgress >= item.landmark.progress - 0.005}
         />
       ))}
     </group>
