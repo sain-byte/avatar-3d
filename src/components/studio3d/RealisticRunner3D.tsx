@@ -167,6 +167,22 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
       gaitPoseRef.current,
     );
 
+    if (
+      !bodyBounceRef.current ||
+      !torsoRef.current ||
+      !headRef.current ||
+      !leftUpperArmRef.current ||
+      !leftForearmRef.current ||
+      !rightUpperArmRef.current ||
+      !rightForearmRef.current ||
+      !leftThighRef.current ||
+      !leftKneeRef.current ||
+      !rightThighRef.current ||
+      !rightKneeRef.current
+    ) {
+      return;
+    }
+
     if (false && finishBlend > 0.002) {
       const rawFinish = evaluateFinishPoseKinematics(poseStyle, t);
       const blended = blendGaitToFinishPoseKinematics(pose, rawFinish, finishBlend, 0.4);

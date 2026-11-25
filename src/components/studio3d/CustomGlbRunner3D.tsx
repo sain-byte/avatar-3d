@@ -691,7 +691,7 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
       const rig = rigMapRef.current;
       const hasUpperChest = Boolean(rig.upperChest);
       const slerpAlpha =
-        poseStyleBlendTimerRef.current > 0 || (rigMode === 'clip' && engageBonesFinish)
+        poseStyleBlendTimerRef.current > 0
           ? 1 - Math.exp(-7.5 * dt)
           : 1;
 
