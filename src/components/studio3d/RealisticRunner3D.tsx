@@ -157,7 +157,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
     const pose = evaluateMultiPhaseGaitFrame(
       runClockRef.current,
       gait,
-      turnLean * (1 - finishBlend),
+      (turnLean * 0.35) * (1 - finishBlend),
       gaitPoseRef.current,
     );
 

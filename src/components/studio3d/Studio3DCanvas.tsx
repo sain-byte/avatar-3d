@@ -271,9 +271,9 @@ const SceneContent: React.FC<
       let diff = rawRunnerYaw - smoothYawRef.current;
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
-      smoothYawRef.current += diff * (1 - Math.exp(-7.5 * dt));
+      smoothYawRef.current += diff * (1 - Math.exp(-4.2 * dt));
     }
-    if (Math.abs(smoothYawRef.current - runnerYaw) > 0.0005) {
+    if (Math.abs(smoothYawRef.current - runnerYaw) > 0.0025) {
       setRunnerYaw(smoothYawRef.current);
     }
 
@@ -321,33 +321,33 @@ const SceneContent: React.FC<
     } else if (effectiveMode === 'follow-chase') {
       const chaseHeight = Math.max(24, visualHeight * 2.4) * zoom;
       const chaseBackDist = chaseHeight * 1.15;
-      const trailAngle = runnerYaw + Math.PI * 0.94;
+      const trailAngle = smoothYawRef.current + Math.PI * 0.94;
       const camX = runnerPos.x + Math.sin(trailAngle) * chaseBackDist;
       const camZ = runnerPos.z + Math.cos(trailAngle) * chaseBackDist;
       camTargetPosRef.current.set(camX, Math.max(runnerPos.y + chaseHeight, 8), camZ);
       camLookTargetRef.current.set(
-        runnerPos.x + Math.sin(runnerYaw) * (runnerScale * 2.8),
+        runnerPos.x + Math.sin(smoothYawRef.current) * (runnerScale * 2.8),
         runnerPos.y + runnerScale * 0.95,
-        runnerPos.z + Math.cos(runnerYaw) * (runnerScale * 2.8),
+        runnerPos.z + Math.cos(smoothYawRef.current) * (runnerScale * 2.8),
       );
     } else if (effectiveMode === 'birds-eye') {
       const birdsHeight =
         Math.max(85, Math.min(240, Math.max(visualHeight * 8.5, track.spanMeters * 0.12))) * zoom;
       const birdsBackDist = birdsHeight * 0.24;
-      const trailAngle = runnerYaw + Math.PI * 0.92;
+      const trailAngle = smoothYawRef.current + Math.PI * 0.92;
       const camX = runnerPos.x + Math.sin(trailAngle) * birdsBackDist;
       const camZ = runnerPos.z + Math.cos(trailAngle) * birdsBackDist;
       camTargetPosRef.current.set(camX, Math.max(runnerPos.y + birdsHeight, 12), camZ);
       camLookTargetRef.current.set(
-        runnerPos.x + Math.sin(runnerYaw) * (runnerScale * 1.8),
+        runnerPos.x + Math.sin(smoothYawRef.current) * (runnerScale * 1.8),
         runnerPos.y + runnerScale * 0.6,
-        runnerPos.z + Math.cos(runnerYaw) * (runnerScale * 1.8),
+        runnerPos.z + Math.cos(smoothYawRef.current) * (runnerScale * 1.8),
       );
     } else if (effectiveMode === 'drone-180') {
       const orbitSweep =
         Math.sin(timelineProgress * Math.PI * 2.5 + state.clock.elapsedTime * 0.22) *
         (Math.PI * 0.5);
-      const orbitAngle = runnerYaw + Math.PI * 0.5 + orbitSweep;
+      const orbitAngle = smoothYawRef.current + Math.PI * 0.5 + orbitSweep;
       const orbitDist = Math.max(visualHeight * 2.8, Math.min(68, track.spanMeters * 0.042)) * zoom;
       const orbitHeight = Math.max(visualHeight * 1.8, Math.min(38, track.spanMeters * 0.025)) * zoom;
       const camX = runnerPos.x + Math.sin(orbitAngle) * orbitDist;
@@ -382,14 +382,14 @@ const SceneContent: React.FC<
       );
       camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 1.15, runnerPos.z);
     } else {
-      const trailAngle = runnerYaw + Math.PI * 0.88;
+      const trailAngle = smoothYawRef.current + Math.PI * 0.88;
       const camX = runnerPos.x + Math.sin(trailAngle) * droneBackDist;
       const camZ = runnerPos.z + Math.cos(trailAngle) * droneBackDist;
       camTargetPosRef.current.set(camX, Math.max(runnerPos.y + droneHeight, 8), camZ);
       camLookTargetRef.current.set(
-        runnerPos.x + Math.sin(runnerYaw) * (runnerScale * 1.8),
+        runnerPos.x + Math.sin(smoothYawRef.current) * (runnerScale * 1.8),
         runnerPos.y + runnerScale * 0.9,
-        runnerPos.z + Math.cos(runnerYaw) * (runnerScale * 1.8),
+        runnerPos.z + Math.cos(smoothYawRef.current) * (runnerScale * 1.8),
       );
     }
 
