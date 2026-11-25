@@ -158,7 +158,7 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
     }
 
     const t = state.clock.elapsedTime;
-    const poseStyle = config.finishPoseStyle ?? 'celebrate-jump';
+    const poseStyle = config.finishPoseStyle ?? 'post-run-selfie';
 
     const pose = evaluateMultiPhaseGaitFrame(
       runClockRef.current,

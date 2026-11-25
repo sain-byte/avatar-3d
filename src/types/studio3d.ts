@@ -4,7 +4,7 @@ export type RunnerAccessory = 'none' | 'cap' | 'headband' | 'visor' | 'trail-ves
 export type CharacterStyle3D = 'realistic' | 'trail-pro' | 'custom-glb';
 export type CharacterSize3D = 'small' | 'medium' | 'large';
 export type GaitMode3D = 'auto' | 'walk' | 'jog' | 'run' | 'sprint';
-export type FinishPoseStyle3D = 'standing-idle' | 'hands-on-hips' | 'check-watch' | 'casual-wave' | 'victory-raise' | 'exhausted-bow' | 'celebrate-jump';
+export type FinishPoseStyle3D = 'post-run-selfie' | 'standing-idle' | 'hands-on-hips' | 'check-watch' | 'casual-wave' | 'victory-raise' | 'exhausted-bow' | 'celebrate-jump';
 export type CustomModelAnimMode = 'auto' | 'bones' | 'clip';
 
 export interface RunnerConfig {
@@ -151,7 +151,7 @@ export const DEFAULT_RUNNER_CONFIG: RunnerConfig = {
   characterStyle: 'realistic',
   characterSize: 'medium',
   gaitMode: 'auto',
-  finishPoseStyle: 'celebrate-jump',
+  finishPoseStyle: 'post-run-selfie',
   customModelUrl: null,
   customModelName: null,
   customModelFlip180: false,

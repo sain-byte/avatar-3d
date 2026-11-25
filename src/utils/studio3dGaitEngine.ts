@@ -458,9 +458,71 @@ export interface FinishPoseKinematics {
  * - Grounded stance feet stay flush to terrain when (hipsPitch + thighPitch + kneeFlex + anklePitch) ~ 0.
  */
 export function evaluateFinishPoseKinematics(
-  poseStyle: 'standing-idle' | 'hands-on-hips' | 'check-watch' | 'casual-wave' | 'victory-raise' | 'exhausted-bow' | 'celebrate-jump',
+  poseStyle: 'post-run-selfie' | 'standing-idle' | 'hands-on-hips' | 'check-watch' | 'casual-wave' | 'victory-raise' | 'exhausted-bow' | 'celebrate-jump',
   timeSec: number,
 ): FinishPoseKinematics {
+  if (poseStyle === 'post-run-selfie') {
+    const breath = Math.sin(timeSec * 2.1);
+    const sway = Math.sin(timeSec * 1.15);
+    const microNod = Math.sin(timeSec * 1.6) * 0.015;
+    return {
+      bodyOffsetY: -0.006 + breath * 0.004,
+      bodyRollZ: sway * 0.012,
+      bodyTiltX: 0.015,
+      hipsPitch: 0.02,
+      hipsYaw: 0.06 + sway * 0.015,
+      hipsRoll: 0.025 + sway * 0.01,
+      spinePitch: 0.02 + breath * 0.012,
+      spineYaw: -0.04,
+      chestPitch: 0.02 + breath * 0.015,
+      chestYaw: -0.04,
+      upperChestPitch: 0.015 + breath * 0.01,
+      neckPitch: -0.02,
+      headPitch: -0.03 + microNod,
+      headRoll: -0.065 + sway * 0.018,
+      // Bahu & tangan kiri rileks di samping tubuh
+      leftShoulderPitch: 0.03,
+      leftShoulderRoll: -0.03,
+      leftArmPitch: 0.08 + breath * 0.012,
+      leftArmYaw: 0.04,
+      leftArmRoll: -0.16,
+      leftArmTwist: 0.05,
+      leftElbowBend: -0.32 - breath * 0.02,
+      leftForeArmTwist: 0.05,
+      leftHandPitch: 0.04,
+      leftHandYaw: 0,
+      leftHandRoll: -0.04,
+      // Bahu & tangan kanan diangkat santai seperti pegang HP untuk selfie post-run
+      rightShoulderPitch: -0.08,
+      rightShoulderRoll: 0.04,
+      rightArmPitch: -0.92 + breath * 0.018,
+      rightArmYaw: -0.26,
+      rightArmRoll: 0.22,
+      rightArmTwist: -0.18,
+      rightElbowBend: -1.18 + microNod,
+      rightForeArmTwist: -0.22,
+      rightHandPitch: -0.12,
+      rightHandYaw: 0.14,
+      rightHandRoll: 0.08,
+      // Kaki berdiri santai (contrapposto stance, tidak kaku lurus)
+      leftThighPitch: -0.09,
+      leftThighYaw: 0.06,
+      leftThighRoll: 0.045,
+      leftKneeFlex: 0.14,
+      leftAnklePitch: -0.05,
+      leftToePitch: 0.02,
+      rightThighPitch: 0.03,
+      rightThighYaw: -0.05,
+      rightThighRoll: -0.04,
+      rightKneeFlex: 0.05,
+      rightAnklePitch: -0.02,
+      rightToePitch: 0.01,
+      fingerCurlBase: 0.34,
+      fingerSpread: 0.05,
+      showConfetti: false,
+    };
+  }
+
   if (poseStyle === 'standing-idle') {
     const breath = Math.sin(timeSec * 2.0);
     const sway = Math.sin(timeSec * 1.1);

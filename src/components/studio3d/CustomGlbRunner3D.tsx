@@ -243,7 +243,7 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
   const smoothSlopeRef = useRef(0);
   const finishBlendRef = useRef(isFinishPose ? 1 : 0);
   const prevScrubRef = useRef(timelineProgress);
-  const prevPoseStyleRef = useRef(config.finishPoseStyle ?? 'celebrate-jump');
+  const prevPoseStyleRef = useRef(config.finishPoseStyle ?? 'post-run-selfie');
   const poseStyleBlendTimerRef = useRef(0);
   const [loadedModel, setLoadedModel] = useState<THREE.Object3D | null>(null);
 
@@ -654,16 +654,11 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
           idleAction.play();
           mixer.update(dt);
         } else if (engageBonesFinish && runAction) {
-          // Matikan bobot klip lari seiring naiknya finishBlend agar tulang tidak tarik-menarik
-          const clipWeight = Math.max(0, 1 - finishBlend * 1.15);
+          // Perlambat siklus lari secara mulus dan blend langsung tanpa pernah melewati T-Pose
+          const clipWeight = Math.max(0, 1 - finishBlend);
           runAction.setEffectiveWeight(clipWeight);
-          if (clipWeight > 0.01) {
-            mixer.update(dt * Math.max(0.12, activeGaitScale));
-          } else {
-            // Reset tulang ke bind-pose bersih sebelum ditimpa kinematika Finish Pose
-            Object.values(rigMapRef.current).forEach((slot) => {
-              if (slot) slot.bone.quaternion.copy(slot.restQuat);
-            });
+          if (clipWeight > 0.005) {
+            mixer.update(dt * Math.max(0.15, activeGaitScale));
           }
         } else if (runAction) {
           // Untuk model GLB non-humanoid (static/custom rig), perlambat siklus lari secara halus lalu masuk pose selebrasi
@@ -717,8 +712,8 @@ export const CustomGlbRunner3D: React.FC<CustomGlbRunner3DProps> = ({
       const rig = rigMapRef.current;
       const hasUpperChest = Boolean(rig.upperChest);
       const slerpAlpha =
-        poseStyleBlendTimerRef.current > 0 || (rigMode === 'clip' && engageBonesFinish && finishBlend < 0.98)
-          ? 1 - Math.exp(-10 * dt)
+        poseStyleBlendTimerRef.current > 0 || (rigMode === 'clip' && engageBonesFinish)
+          ? 1 - Math.exp(-7.5 * dt)
           : 1;
 
       if (blendedFinishPose) {
