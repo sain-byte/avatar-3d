@@ -276,7 +276,7 @@ function resolveOverlayPrimaryText(mode: string | undefined, mapStyle: 'light' |
   stroke: string;
   shadow: string;
 } {
-  const effective = !mode || mode === 'auto' ? (mapStyle === 'dark' ? '#FFFFFF' : '#0F172A') : mode;
+  const effective = !mode || mode === 'auto' ? (mapStyle === 'dark' || mapStyle === 'satellite' ? '#FFFFFF' : '#0F172A') : mode;
   const isDarkText = effective.toLowerCase() === '#0f172a' || effective.toLowerCase() === '#000000' || effective.toLowerCase() === '#1e293b';
   return isDarkText
     ? {
@@ -301,7 +301,7 @@ function paintBroadcastHudOverlay(params: {
   runner: RunnerConfig;
   accentColor: string;
   textColorMode?: string;
-  mapStyle?: 'light' | 'dark';
+  mapStyle?: 'clean' | 'street' | 'dark' | 'satellite';
   telemetry: Studio3DFrameTelemetry;
   allSplits: KmSplitItem[];
   progress: number;
@@ -316,7 +316,7 @@ function paintBroadcastHudOverlay(params: {
   const padX = 32 * s;
   const topY = 28 * s;
   const mmSize = 86 * s;
-  const runnerNameClean = (runner.runnerName || 'Pelari').trim().slice(0, 24);
+  const runnerNameClean = (runner.runnerName || 'Atlet Kalcer').trim().slice(0, 24);
   const locationClean = (track.location || '').trim();
   const metaSubline = locationClean
     ? `${track.date} · ${locationClean.slice(0, 24)}`
@@ -593,7 +593,7 @@ export interface ExportVideoCallbacks {
   exportConfig: ExportConfig;
   overlayColor?: string;
   overlayTextColor?: string;
-  mapStyle?: 'light' | 'dark';
+  mapStyle?: 'clean' | 'street' | 'dark' | 'satellite';
   onPercent: (pct: number) => void;
   abortSignal: AbortSignal;
 }
@@ -608,7 +608,7 @@ export async function recordStudio3DVideo({
   exportConfig,
   overlayColor = '#F97316',
   overlayTextColor = 'auto',
-  mapStyle = 'light',
+  mapStyle = 'clean',
   onPercent,
   abortSignal,
 }: ExportVideoCallbacks): Promise<{ blob: Blob; filename: string; extension: 'mp4' | 'webm' }> {

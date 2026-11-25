@@ -45,7 +45,7 @@ export type CameraMode3D =
   | 'overview'
   | 'finish-pose';
 export type Camera20mAngle = 'front' | 'back' | 'side' | 'orbit';
-export type MapMode3D = 'light' | 'dark';
+export type MapMode3D = 'clean' | 'street' | 'dark' | 'satellite';
 export type MapStyle3D = MapMode3D;
 
 export type LightingMood3D =
@@ -150,7 +150,7 @@ export const DEFAULT_RUNNER_CONFIG: RunnerConfig = {
   customModelName: null,
   customModelFlip180: false,
   customModelAnimMode: 'auto',
-  runnerName: 'Pelari Nusantara',
+  runnerName: 'Atlet Kalcer',
   bibNumber: '2026',
   gender: 'male',
   glasses: false,
@@ -165,7 +165,7 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   cameraMode: 'auto',
   camera20mAngle: 'back',
   cameraZoom: 1.0,
-  mapStyle: 'light',
+  mapStyle: 'clean',
   buildings3d: true,
   lightingMood: 'auto',
   routeStyle: 'google-maps',

@@ -455,7 +455,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
   
   const effectiveOverlayTextColor =
     !mapConfig.overlayTextColor || mapConfig.overlayTextColor === 'auto'
-      ? mapConfig.mapStyle === 'dark'
+      ? mapConfig.mapStyle === 'dark' || mapConfig.mapStyle === 'satellite'
         ? '#FFFFFF'
         : '#0F172A'
       : mapConfig.overlayTextColor;
@@ -1037,7 +1037,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                   <div className="flex items-start justify-between gap-2">
                     <div className="h-14 flex flex-col justify-between min-w-0 flex-1 py-0.5 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
                       <p className="font-mono-tabular text-[10px] font-extrabold tracking-wide truncate leading-none" style={{ color: mapConfig.overlayColor || "#F97316" }}>
-                        {(runner.runnerName || 'Pelari').trim()}
+                        {(runner.runnerName || 'Atlet Kalcer').trim()}
                       </p>
                       <p className="font-display text-[13px] font-bold  truncate leading-tight">
                         {activeTrack.title}
@@ -1139,7 +1139,7 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                             Activity Completed
                           </p>
                           <p className="font-display text-xs font-bold  truncate">
-                            {(runner.runnerName || 'Pelari').trim()} · {activeTrack.title}
+                            {(runner.runnerName || 'Atlet Kalcer').trim()} · {activeTrack.title}
                           </p>
                         </div>
                       </div>

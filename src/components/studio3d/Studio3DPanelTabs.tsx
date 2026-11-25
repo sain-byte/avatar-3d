@@ -397,7 +397,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                   onChange={(e) =>
                     onChangeRunner((prev) => ({ ...prev, runnerName: e.target.value }))
                   }
-                  placeholder="Nama Pelari"
+                  placeholder="Atlet Kalcer"
                   className="w-full h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-900 dark:text-white"
                 />
               </div>

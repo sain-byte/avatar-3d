@@ -543,7 +543,7 @@ export const Studio3DCanvas: React.FC<Studio3DCanvasProps> = (props) => {
         <div
           className="relative w-full h-full overflow-hidden transition-colors duration-300"
           style={{
-            backgroundColor: props.mapConfig.mapStyle === 'dark' ? '#0B1120' : '#F3EFE6',
+            backgroundColor: props.mapConfig.mapStyle === 'dark' || props.mapConfig.mapStyle === 'satellite' ? '#0B1120' : props.mapConfig.mapStyle === 'clean' ? '#F1F5F9' : '#F3EFE6',
           }}
         >
           <div

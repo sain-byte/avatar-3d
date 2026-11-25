@@ -15,10 +15,39 @@ import {
   type GroundedRoutePath,
 } from '../../utils/studio3dGpsEngine';
 
-export const MAP_STYLES: Record<MapMode3D, string> = {
-  light: 'https://tiles.openfreemap.org/styles/liberty',
-  dark: 'https://tiles.openfreemap.org/styles/dark',
+const SATELLITE_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    'esri-satellite': {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      ],
+      tileSize: 256,
+      maxzoom: 19,
+    },
+  },
+  layers: [
+    {
+      id: 'esri-satellite-layer',
+      type: 'raster',
+      source: 'esri-satellite',
+      minzoom: 0,
+      maxzoom: 22,
+    },
+  ],
 };
+
+export const MAP_STYLES: Record<MapMode3D, string | maplibregl.StyleSpecification> = {
+  clean: 'https://tiles.openfreemap.org/styles/positron',
+  street: 'https://tiles.openfreemap.org/styles/liberty',
+  dark: 'https://tiles.openfreemap.org/styles/dark',
+  satellite: SATELLITE_STYLE,
+};
+
+export function isDarkMapTheme(mode: MapMode3D): boolean {
+  return mode === 'dark' || mode === 'satellite';
+}
 
 interface TerrainMap3DProps {
   track: Studio3DTrack;
@@ -92,7 +121,7 @@ const LandmarkMarker3D: React.FC<{
 };
 
 function add3DBuildingsToMap(map: maplibregl.Map, mode: MapMode3D, enabled: boolean) {
-  if (!enabled) {
+  if (!enabled || mode === 'satellite') {
     if (map.getLayer('3d-buildings')) {
       map.removeLayer('3d-buildings');
     }
@@ -112,25 +141,25 @@ function add3DBuildingsToMap(map: maplibregl.Map, mode: MapMode3D, enabled: bool
       source: 'openmaptiles',
       'source-layer': 'building',
       type: 'fill-extrusion',
-      minzoom: 13.5,
+      minzoom: 13,
       paint: {
-        'fill-extrusion-color': mode === 'dark' ? '#64748b' : '#b8c4d1',
-        'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 12],
+        'fill-extrusion-color':
+          mode === 'dark' ? '#475569' : mode === 'clean' ? '#cbd5e1' : '#aebbc9',
+        'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 14],
         'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
-        'fill-extrusion-opacity': 0.85,
+        'fill-extrusion-opacity': 0.88,
       },
     },
     labelLayer?.id,
   );
 }
 
-// Reset total garis rute: 1 garis sehelai rambut (hairline) yang presisi menempel jalan tanpa menutupi map
 function syncHairlineRouteOnMap(
   map: maplibregl.Map,
   track: Studio3DTrack,
   routeProgress: number,
   accentColor: string,
-  isDark: boolean,
+  darkTheme: boolean,
 ) {
   if (!map.isStyleLoaded() || track.points.length < 2) return;
 
@@ -152,7 +181,7 @@ function syncHairlineRouteOnMap(
     geometry: { type: 'LineString', coordinates: activeCoords },
   };
 
-  const baseColor = isDark ? 'rgba(255, 255, 255, 0.32)' : 'rgba(15, 23, 42, 0.25)';
+  const baseColor = darkTheme ? 'rgba(255, 255, 255, 0.36)' : 'rgba(15, 23, 42, 0.24)';
 
   const fullSrc = map.getSource('gpx-route-full') as maplibregl.GeoJSONSource | undefined;
   if (fullSrc) {
@@ -186,7 +215,7 @@ function syncHairlineRouteOnMap(
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: {
         'line-color': accentColor,
-        'line-width': 2.6,
+        'line-width': 2.7,
         'line-opacity': 0.96,
       },
     });
@@ -231,9 +260,9 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
       style: MAP_STYLES[currentModeRef.current],
       center: [track.centerLon, track.centerLat],
       zoom: 16.5,
-      pitch: buildings3dRef.current ? 56 : 0,
+      pitch: buildings3dRef.current ? 54 : 0,
       bearing: 0,
-      maxPitch: 85,
+      maxPitch: 60,
       interactive: false,
       attributionControl: false,
       canvasContextAttributes: {
@@ -247,7 +276,13 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
 
     const handleLoad = () => {
       add3DBuildingsToMap(map, currentModeRef.current, buildings3dRef.current);
-      syncHairlineRouteOnMap(map, track, routeProgress, overlayColor, currentModeRef.current === 'dark');
+      syncHairlineRouteOnMap(
+        map,
+        track,
+        routeProgress,
+        overlayColor,
+        isDarkMapTheme(currentModeRef.current),
+      );
       onMapLoadStatus?.({
         phase: 'ready',
         loadedTiles: 1,
@@ -301,7 +336,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     map.setStyle(MAP_STYLES[mapStyle]);
     map.once('style.load', () => {
       add3DBuildingsToMap(map, mapStyle, buildings3dRef.current);
-      syncHairlineRouteOnMap(map, track, routeProgress, overlayColor, mapStyle === 'dark');
+      syncHairlineRouteOnMap(map, track, routeProgress, overlayColor, isDarkMapTheme(mapStyle));
       onMapLoadStatus?.({
         phase: 'ready',
         loadedTiles: 1,
@@ -321,7 +356,13 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
   useFrame(() => {
     const map = mapRef.current;
     if (!map) return;
-    syncHairlineRouteOnMap(map, track, routeProgress, overlayColor, currentModeRef.current === 'dark');
+    syncHairlineRouteOnMap(
+      map,
+      track,
+      routeProgress,
+      overlayColor,
+      isDarkMapTheme(currentModeRef.current),
+    );
 
     const fwd = forwardVecRef.current;
     camera.getWorldDirection(fwd);
@@ -386,7 +427,7 @@ export const TerrainMap3D: React.FC<TerrainMap3DProps> = ({
     <group name="TerrainMapRoot">
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[12000, 12000]} />
-        <shadowMaterial transparent opacity={isNight ? 0.35 : 0.24} />
+        <shadowMaterial transparent opacity={isNight ? 0.36 : 0.25} />
       </mesh>
 
       {landmarkMarkers.map((item) => (
