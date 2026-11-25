@@ -169,11 +169,10 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Gaya Avatar 3D
                 </h3>
-                <div className="grid grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-2 gap-2">
                   {(
                     [
-                      { id: 'realistic', label: 'Atlet Road' },
-                      { id: 'trail-pro', label: 'Atlet Trail' },
+                      { id: 'realistic', label: 'Atlet Lokal' },
                       { id: 'custom-glb', label: 'Custom .GLB' },
                     ] as Array<{ id: CharacterStyle3D; label: string }>
                   ).map((st) => (

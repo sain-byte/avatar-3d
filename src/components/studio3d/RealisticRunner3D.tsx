@@ -335,8 +335,8 @@ export const RealisticRunner3D: React.FC<RealisticRunner3DProps> = ({
           {/* HEAD GROUP (Natural human head ~1/7 body height) */}
           <group ref={headRef} position={[0, 0.68, 0.01]}>
             {/* Cranium & Face */}
-            <mesh scale={[0.92, 1.12, 0.98]} castShadow>
-              <sphereGeometry args={[0.125, 22, 18]} />
+            <mesh scale={[1.02, 1.08, 1.02]} castShadow>
+              <sphereGeometry args={[0.138, 22, 18]} />
               <meshStandardMaterial color={skinColor} roughness={0.62} metalness={0.02} />
             </mesh>
             {/* Subtle jaw / chin contour */}
