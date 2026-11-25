@@ -356,15 +356,15 @@ export function evaluateMultiPhaseGaitFrame(
   const armWaveRight = -armWaveLeft;
 
   // Pelvis & Spine/Chest counter-rotation
-  out.pelvisYaw = strideWave * gait.hipTwistAmp;
+  out.pelvisYaw = strideWave * gait.hipTwistAmp * 0.45;
   out.pelvisPitch = gait.forwardLean * 0.22;
 
   out.spinePitch = gait.forwardLean * 0.42;
-  out.spineYaw = -strideWave * gait.torsoTwistAmp * 0.38;
+  out.spineYaw = -strideWave * gait.torsoTwistAmp * 0.2;
 
   out.chestPitch = gait.forwardLean * 0.52;
-  out.chestYaw = -strideWave * gait.torsoTwistAmp * 0.68;
-  out.chestRoll = -strideWave * gait.torsoTwistAmp * 0.18;
+  out.chestYaw = -strideWave * gait.torsoTwistAmp * 0.35;
+  out.chestRoll = -strideWave * gait.torsoTwistAmp * 0.08;
 
   // Head & neck stabilize forward gaze
   out.neckPitch = -gait.forwardLean * 0.32;

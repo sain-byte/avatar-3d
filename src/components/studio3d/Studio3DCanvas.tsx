@@ -231,10 +231,13 @@ const SceneContent: React.FC<
     [track.spanMeters, characterSizeFactor],
   );
 
-  const { runnerPos, runnerYaw } = useMemo(() => {
+  const { runnerPos, rawRunnerYaw } = useMemo(() => {
     const sampled = sampleGroundedRouteAtProgress(groundedPath, routeProgress);
-    return { runnerPos: sampled.position, runnerYaw: sampled.yawRad };
+    return { runnerPos: sampled.position, rawRunnerYaw: sampled.yawRad };
   }, [groundedPath, routeProgress]);
+
+  const smoothYawRef = useRef<number>(rawRunnerYaw);
+  const [runnerYaw, setRunnerYaw] = useState<number>(rawRunnerYaw);
 
   const effectiveRunnerConfig = useMemo<RunnerConfig>(() => {
     if (runner.characterStyle === 'trail-pro') {
@@ -260,6 +263,19 @@ const SceneContent: React.FC<
 
   useFrame((state, delta) => {
     const dt = Math.min(0.05, delta);
+
+    // Shortest-angle exponential damper agar zig-zag titik GPS tidak bikin avatar & kamera getar
+    if (!initializedCamRef.current || (!isPlaying && Math.abs(timelineProgress - prevScrubProgressRef.current) > 0.02)) {
+      smoothYawRef.current = rawRunnerYaw;
+    } else {
+      let diff = rawRunnerYaw - smoothYawRef.current;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      smoothYawRef.current += diff * (1 - Math.exp(-7.5 * dt));
+    }
+    if (Math.abs(smoothYawRef.current - runnerYaw) > 0.0005) {
+      setRunnerYaw(smoothYawRef.current);
+    }
 
     const effectiveMode = resolveEffectiveCameraMode(
       mapConfig.cameraMode,
