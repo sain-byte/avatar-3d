@@ -179,7 +179,7 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
 export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
   durationPreset: 30,
   customDurationSec: 25,
-  includeFinishPose: true,
+  includeFinishPose: false,
   musicPreset: 'upbeat-synth',
   customAudioUrl: null,
   customAudioName: null,

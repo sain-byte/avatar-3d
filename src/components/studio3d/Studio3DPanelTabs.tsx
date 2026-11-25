@@ -223,33 +223,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                   ))}
                 </div>
 
-                <div className="grid grid-cols-3 gap-1.5 pt-1">
-                  {(
-                    [
-                      { id: 'standing-idle', label: 'Berdiri Santai' },
-                      { id: 'hands-on-hips', label: 'Tangan Pinggang' },
-                      { id: 'check-watch', label: 'Cek Jam' },
-                      { id: 'casual-wave', label: 'Sapa Santai' },
-                      { id: 'victory-raise', label: 'Angkat Tangan' },
-                      { id: 'exhausted-bow', label: 'Tunduk Lelah' },
-                      { id: 'celebrate-jump', label: 'Lompat' },
-                    ] as Array<{ id: FinishPoseStyle3D; label: string }>
-                  ).map((fp) => (
-                    <button
-                      key={fp.id}
-                      type="button"
-                      onClick={() => onChangeRunner((prev) => ({ ...prev, finishPoseStyle: fp.id }))}
-                      className={`h-8 px-2 rounded-lg border text-[11px] font-semibold cursor-pointer ${
-                        runner.finishPoseStyle === fp.id
-                          ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                      }`}
-                    >
-                      {fp.label}
-                    </button>
-                  ))}
                 </div>
-              </div>
 
               {/* Upload & Simpan Avatar Custom .GLB */}
               <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
