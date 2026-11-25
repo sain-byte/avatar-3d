@@ -163,6 +163,22 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             data-testid="studio3d-panel-pelari"
           >
+            <div className="md:col-span-2 lg:col-span-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="space-y-2">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Nama Pelari (Overlay Video)
+                </h3>
+                <input
+                  type="text"
+                  value={runner.runnerName}
+                  onChange={(e) =>
+                    onChangeRunner((prev) => ({ ...prev, runnerName: e.target.value }))
+                  }
+                  placeholder="Atlet Kalcer"
+                  className="w-full h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
             {/* Kolom 1: Gaya Karakter & Model Custom GLB */}
             <section className="space-y-4">
               <div className="space-y-2">
@@ -170,26 +186,50 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                   Gaya Avatar 3D
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
-                  {(
-                    [
-                      { id: 'realistic', label: 'Atlet Lokal' },
-                      { id: 'custom-glb', label: 'Custom .GLB' },
-                    ] as Array<{ id: CharacterStyle3D; label: string }>
-                  ).map((st) => (
-                    <button
-                      key={st.id}
-                      type="button"
-                      data-testid={`studio3d-charstyle-${st.id}`}
-                      onClick={() => onChangeRunner((prev) => ({ ...prev, characterStyle: st.id }))}
-                      className={`h-9 px-2 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
-                        runner.characterStyle === st.id
-                          ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      {st.label}
-                    </button>
-                  ))}
+                  <button
+                    type="button"
+                    data-testid="studio3d-your-avatar"
+                    onClick={() => {
+                      const savedUrl =
+                        runner.customModelUrl &&
+                        !runner.customModelUrl.includes("threejs.org/examples/models/gltf/")
+                          ? runner.customModelUrl
+                          : null;
+                      if (savedUrl) {
+                        onChangeRunner((prev) => ({
+                          ...prev,
+                          characterStyle: "custom-glb",
+                          customModelUrl: savedUrl,
+                        }));
+                      } else {
+                        setReplaceTargetId(undefined);
+                        glbInputRef.current?.click();
+                      }
+                    }}
+                    className={`h-9 px-2 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+                      runner.characterStyle === "custom-glb" &&
+                      runner.customModelUrl &&
+                      !runner.customModelUrl.includes("threejs.org/examples/models/gltf/")
+                        ? "border-emerald-500 bg-emerald-600 text-white shadow-sm"
+                        : "border-emerald-500/60 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+                    }`}
+                  >
+                    Your Avatar
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="studio3d-charstyle-custom-glb"
+                    onClick={() =>
+                      onChangeRunner((prev) => ({ ...prev, characterStyle: "custom-glb" }))
+                    }
+                    className={`h-9 px-2 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+                      runner.characterStyle === "custom-glb"
+                        ? "border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300"
+                        : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    Custom .GLB
+                  </button>
                 </div>
               </div>
 
@@ -283,18 +323,6 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                       {
                         label: "Atlet Michelle (Wanita)",
                         url: "https://threejs.org/examples/models/gltf/Michelle.glb",
-                        flip180: false,
-                        animMode: "clip" as const,
-                      },
-                      {
-                        label: "Kira (Wanita)",
-                        url: "https://threejs.org/examples/models/gltf/kira.glb",
-                        flip180: false,
-                        animMode: "clip" as const,
-                      },
-                      {
-                        label: "Nemetona (Wanita)",
-                        url: "https://threejs.org/examples/models/gltf/nemetona.glb",
                         flip180: false,
                         animMode: "clip" as const,
                       },
@@ -463,189 +491,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
               </div>
             </section>
 
-            {/* Kolom 2: Identitas Pelari & Penampilan */}
-            <section className="space-y-4 md:border-l md:border-slate-100 md:dark:border-slate-800 md:pl-6">
-              <div className="space-y-2">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Nama Pelari (Overlay Video)
-                </h3>
-                <input
-                  type="text"
-                  value={runner.runnerName}
-                  onChange={(e) =>
-                    onChangeRunner((prev) => ({ ...prev, runnerName: e.target.value }))
-                  }
-                  placeholder="Atlet Kalcer"
-                  className="w-full h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-900 dark:text-white"
-                />
-              </div>
 
-              <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Gender, Rambut & Aksesoris
-                </h3>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {(
-                    [
-                      { id: 'male', label: 'Pria' },
-                      { id: 'female', label: 'Wanita' },
-                    ] as Array<{ id: RunnerGender; label: string }>
-                  ).map((g) => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => onChangeRunner((prev) => ({ ...prev, gender: g.id }))}
-                      className={`h-8 rounded-lg border text-xs font-semibold cursor-pointer ${
-                        runner.gender === g.id
-                          ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                      }`}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-3 gap-1.5">
-                  {(
-                    [
-                      { id: 'undercut', label: 'Undercut' },
-                      { id: 'spiky', label: 'Spiky' },
-                      { id: 'side-fade', label: 'Side Fade' },
-                    ] as Array<{ id: RunnerHairStyle; label: string }>
-                  ).map((hs) => (
-                    <button
-                      key={hs.id}
-                      type="button"
-                      onClick={() => onChangeRunner((prev) => ({ ...prev, hairStyle: hs.id }))}
-                      className={`h-7 rounded-lg border text-[11px] font-semibold cursor-pointer ${
-                        runner.hairStyle === hs.id
-                          ? 'border-slate-900 dark:border-blue-500 bg-slate-900 dark:bg-blue-600 text-white'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                      }`}
-                    >
-                      {hs.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {(
-                    [
-                      { id: 'none', label: 'Polos' },
-                      { id: 'cap', label: 'Topi Lari' },
-                      { id: 'visor', label: 'Visor' },
-                      { id: 'headband', label: 'Headband' },
-                      { id: 'trail-vest', label: 'Trail Vest' },
-                    ] as Array<{ id: RunnerAccessory; label: string }>
-                  ).map((acc) => (
-                    <button
-                      key={acc.id}
-                      type="button"
-                      onClick={() => onChangeRunner((prev) => ({ ...prev, accessory: acc.id }))}
-                      className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold cursor-pointer ${
-                        runner.accessory === acc.id
-                          ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                      }`}
-                    >
-                      {acc.label}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onChangeRunner((prev) => ({ ...prev, glasses: !prev.glasses }))
-                    }
-                    className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold cursor-pointer ${
-                      runner.glasses
-                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
-                        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                    }`}
-                  >
-                    Kacamata Sport
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            {/* Kolom 3: Warna Outfit (Jersey, Celana, Sepatu) */}
-            <section className="space-y-4 lg:border-l lg:border-slate-100 lg:dark:border-slate-800 lg:pl-6">
-              <div className="space-y-2">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Warna Jersey
-                </h3>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {JERSEY_SWATCHES.map((hex) => (
-                    <button
-                      key={hex}
-                      type="button"
-                      onClick={() => onChangeRunner((prev) => ({ ...prev, jerseyColor: hex }))}
-                      aria-label={`Warna jersey ${hex}`}
-                      className={`w-6 h-6 rounded-full border-2 cursor-pointer ${
-                        runner.jerseyColor.toUpperCase() === hex
-                          ? 'border-slate-900 dark:border-white scale-110'
-                          : 'border-white/60 dark:border-slate-700'
-                      }`}
-                      style={{ backgroundColor: hex }}
-                    />
-                  ))}
-                  <input
-                    type="color"
-                    value={runner.jerseyColor}
-                    onChange={(e) =>
-                      onChangeRunner((prev) => ({ ...prev, jerseyColor: e.target.value }))
-                    }
-                    aria-label="Pilih warna jersey custom"
-                    className="w-7 h-6 rounded cursor-pointer border-0 bg-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Warna Celana
-                </h3>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {SHORTS_SWATCHES.map((hex) => (
-                    <button
-                      key={hex}
-                      type="button"
-                      onClick={() => onChangeRunner((prev) => ({ ...prev, shortsColor: hex }))}
-                      aria-label={`Warna celana ${hex}`}
-                      className={`w-6 h-6 rounded-full border-2 cursor-pointer ${
-                        runner.shortsColor.toUpperCase() === hex
-                          ? 'border-blue-600 scale-110'
-                          : 'border-slate-300 dark:border-slate-700'
-                      }`}
-                      style={{ backgroundColor: hex }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Warna Sepatu Lari
-                </h3>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {SHOES_SWATCHES.map((hex) => (
-                    <button
-                      key={hex}
-                      type="button"
-                      onClick={() => onChangeRunner((prev) => ({ ...prev, shoesColor: hex }))}
-                      aria-label={`Warna sepatu ${hex}`}
-                      className={`w-6 h-6 rounded-full border-2 cursor-pointer ${
-                        runner.shoesColor.toUpperCase() === hex
-                          ? 'border-slate-900 dark:border-white scale-110'
-                          : 'border-slate-300 dark:border-slate-700'
-                      }`}
-                      style={{ backgroundColor: hex }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
           </div>
         )}
 
