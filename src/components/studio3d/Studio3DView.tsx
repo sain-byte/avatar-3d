@@ -457,13 +457,9 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
   const overlayAccent = mapConfig.overlayColor || '#F97316';
   const showOverlayPanel = overlayTheme !== 'off';
   const useOverlayBox =
-    overlayTheme === 'off'
+    overlayTheme === 'off' || overlayTheme === 'editorial'
       ? false
-      : overlayTheme === 'editorial'
-        ? false
-        : overlayTheme === 'kalcer' || overlayTheme === 'neon' || overlayTheme === 'telemetry'
-          ? (mapConfig.overlayBox ?? true)
-          : (mapConfig.overlayBox ?? true);
+      : (mapConfig.overlayBox ?? true);
 
   const getOverlaySurfaceClass = (kind: 'top' | 'bottom' | 'finish') => {
     if (!useOverlayBox) {
@@ -1091,8 +1087,8 @@ export const Studio3DView: React.FC<Studio3DViewProps> = ({
                 <div
                   className="pointer-events-none absolute bottom-0 inset-x-0 pb-3 px-3 z-10"
                   style={{
-                    color: (mapConfig.overlayBox ?? true) ? '#FFFFFF' : effectiveOverlayTextColor,
-                    textShadow: (mapConfig.overlayBox ?? true)
+                    color: useOverlayBox ? '#FFFFFF' : effectiveOverlayTextColor,
+                    textShadow: useOverlayBox
                       ? '0 1px 3px rgba(0,0,0,0.85)'
                       : overlayTextShadow,
                   }}
