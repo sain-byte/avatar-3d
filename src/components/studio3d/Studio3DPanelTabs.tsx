@@ -233,7 +233,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
                 </div>
               </div>
 
-              <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="space-y-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Gaya Gerak & Pose Finish
                 </h3>
@@ -613,41 +613,7 @@ export const Studio3DPanelTabs: React.FC<Studio3DPanelTabsProps> = ({
             </section>
 
             {/* Kolom 2: Pencahayaan & Header Info Video */}
-            <section className="space-y-4 md:border-l md:border-slate-100 md:dark:border-slate-800 md:pl-6">
-              <div className="space-y-2">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Pencahayaan Avatar
-                </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {(
-                    [
-                      { id: 'auto', label: 'Auto' },
-                      { id: 'morning', label: 'Pagi' },
-                      { id: 'evening', label: 'Sore' },
-                      { id: 'night', label: 'Malam' },
-                      { id: 'city-park', label: 'City Park' },
-                      { id: 'mountain', label: 'Mountain' },
-                      { id: 'night-run', label: 'Night Run' },
-                    ] as Array<{ id: LightingMood3D; label: string }>
-                  ).map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() =>
-                        onChangeMapConfig((prev) => ({ ...prev, lightingMood: m.id }))
-                      }
-                      className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                        mapConfig.lightingMood === m.id
-                          ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      {m.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
+            <section className="space-y-2.5 md:border-l md:border-slate-100 md:dark:border-slate-800 md:pl-5">
               <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Info Aktivitas (Overlay Video)
