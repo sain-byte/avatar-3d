@@ -208,7 +208,7 @@ const SceneContent: React.FC<
   }, [gl, scene]);
 
   const groundedPath = useMemo(
-    () => buildGroundedRoutePath(track.points, () => 0, { heightOffsetM: 0.015 }),
+    () => buildGroundedRoutePath(track.points, () => 0, { heightOffsetM: 0.005 }),
     [track],
   );
 
@@ -379,18 +379,25 @@ const SceneContent: React.FC<
       camLookTargetRef.current.set(runnerPos.x, runnerPos.y + runnerScale * 0.9, runnerPos.z);
     } else if (effectiveMode === 'finish-pose') {
       const finishZoom = THREE.MathUtils.clamp(zoom, 0.75, 1.55);
-      // Kamera di sisi depan pelari agar menghadap ke arah wajah saat finish
       const frontAngle = smoothYawRef.current + Math.PI;
-      const heroDist = runnerScale * 4.2 * finishZoom;
-      const heroHeight = Math.max(runnerPos.y + runnerScale * 1.15, runnerPos.y + 2.5);
+      const finishSpan = Math.max(0.04, 1 - finishThreshold);
+      const finishRatio = THREE.MathUtils.clamp((timelineProgress - finishThreshold) / finishSpan, 0, 1);
+      // Putar 360 derajat selama fase finish, lalu mendarat menghadap depan wajah pelari di akhir
+      const remainingSpin = (1 - finishRatio) * Math.PI * 2;
+      const orbitAngle =
+        mapConfig.cameraMode === 'finish-pose'
+          ? frontAngle + Math.sin(state.clock.elapsedTime * 0.65) * 0.35
+          : frontAngle + remainingSpin;
+      const heroDist = runnerScale * 4.4 * finishZoom;
+      const heroHeight = Math.max(runnerPos.y + runnerScale * 1.22, runnerPos.y + 2.5);
       camTargetPosRef.current.set(
-        runnerPos.x + Math.sin(frontAngle) * heroDist,
+        runnerPos.x + Math.sin(orbitAngle) * heroDist,
         heroHeight,
-        runnerPos.z + Math.cos(frontAngle) * heroDist,
+        runnerPos.z + Math.cos(orbitAngle) * heroDist,
       );
       camLookTargetRef.current.set(
         runnerPos.x,
-        runnerPos.y + runnerScale * 1.25,
+        runnerPos.y + runnerScale * 1.22,
         runnerPos.z,
       );
     } else {
@@ -520,7 +527,7 @@ const SceneContent: React.FC<
       />
 
       {/* Beacon ring di bawah kaki pelari agar posisi atlet selalu jelas di atas jalan */}
-      <group position={[runnerPos.x, runnerPos.y + 0.015, runnerPos.z]}>
+      <group position={[runnerPos.x, runnerPos.y + 0.005, runnerPos.z]}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[runnerScale * 0.36, runnerScale * 0.50, 32]} />
           <meshBasicMaterial color={mapConfig.overlayColor ?? '#F97316'} transparent opacity={0.48} side={THREE.DoubleSide} />
